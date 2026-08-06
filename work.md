@@ -257,3 +257,31 @@ chrome --headless=new --dump-dom http://localhost:4173/#/   # 首页渲染正常
 ### 提醒
 
 预览服务器与浏览器可能缓存旧 JS，查看效果前请强制刷新（Ctrl+F5）。
+
+## 2026-08-06 图表空白 bug 修复（structuredClone 与函数）
+
+### 问题
+
+两阶段渲染上线后，以下四个图表变为空白（只剩背景）：
+- 省份 × 批次子项热力图（TOP15）
+- 类别规模分布
+- 传承人覆盖率（按类别）
+- 传承人公开数量 TOP15（省级）
+
+### 根因
+
+`zeroSeriesData` 使用 `structuredClone` 深拷贝 ECharts 配置，而配置中的 `tooltip.formatter` 等是**函数**；
+`structuredClone` 遇到函数抛 `DataCloneError`，导致初始化中断、图表空白。正好这四个图表都带自定义 formatter，其余图表不受影响。
+
+### 修复
+
+- `web/src/utils/lazyChart.ts`：`zeroSeriesData` 改用保留函数的深拷贝（`cloneKeepFns`），不再抛错；
+- 两阶段渲染整体加 try/catch 兜底：任何异常都回退为直接渲染真实数据，避免空白图表；
+- 新增回归单测：确认 formatter 函数被保留且数据仍被归零（vitest 15/15 通过）。
+
+### 验证（真实浏览器像素统计）
+
+- `web/scripts/verify_charts.mjs`：滚动整页后统计各 canvas 不透明像素数：
+  - 热力图 341833、类别规模 54205、覆盖率 68467、传承人 TOP15 166813、地图 55543、演化柱 54205/59072、对比雷达 28318/55349；
+  - 星空画布仅 478（星星），其余图表均有大量绘制内容，空白问题确认解决；
+- type-check 0 错误；vitest 15/15；vite build 成功；三个区块 headless 冒烟无 JS 错误。

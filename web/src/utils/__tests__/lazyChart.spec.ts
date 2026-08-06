@@ -39,4 +39,17 @@ describe('zeroSeriesData', () => {
     const data = (out.series as Array<{ data: Array<{ value: number[] }> }>)[0].data
     expect(data[0].value).toEqual([0, 0, 0])
   })
+
+  it('保留 tooltip formatter 等函数（structuredClone 会抛错的场景）', () => {
+    const formatter = (params: unknown) => String(params)
+    const out = zeroSeriesData({
+      tooltip: { formatter },
+      series: [{ type: 'bar', data: [5, 9] }],
+    })
+    const tooltip = (out as { tooltip?: { formatter?: unknown } }).tooltip
+    expect(tooltip?.formatter).toBe(formatter)
+    expect(tooltip?.formatter).toBeTypeOf('function')
+    const data = (out.series as Array<{ data: number[] }>)[0].data
+    expect(data).toEqual([0, 0])
+  })
 })

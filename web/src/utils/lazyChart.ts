@@ -3,9 +3,25 @@ import { onBeforeUnmount, onMounted, shallowRef, type Ref } from 'vue'
 
 type Option = echarts.EChartsOption
 
+/** 保留函数的深拷贝：structuredClone 无法处理函数（tooltip formatter 等）。 */
+function cloneKeepFns<T>(value: T): T {
+  if (typeof value === 'function') return value
+  if (Array.isArray(value)) {
+    return value.map((v) => cloneKeepFns(v)) as unknown as T
+  }
+  if (value !== null && typeof value === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const key of Object.keys(value as Record<string, unknown>)) {
+      out[key] = cloneKeepFns((value as Record<string, unknown>)[key])
+    }
+    return out as T
+  }
+  return value
+}
+
 /** 将系列数据归零：数字 -> 0；{value} -> 0；heatmap 三元组 [x,y,v] -> [x,y,0]。 */
 export function zeroSeriesData(option: Option): Option {
-  const out = structuredClone(option) as Option
+  const out = cloneKeepFns(option)
   const series = (out.series ?? []) as Array<Record<string, unknown>>
   for (const s of series) {
     const data = s.data
@@ -49,23 +65,34 @@ export function useLazyChart(
       if (el.value.parentElement) ro.observe(el.value.parentElement)
       // 两阶段渲染：先以 0 值（关闭动画）渲染，下一帧再渲染真实数据，
       // 强制触发“柱子从 0 长出来”的更新动画，不依赖首次渲染动画。
-      const real = build()
-      const zeroed = zeroSeriesData(real)
-      chart.value.setOption({ ...zeroed, animation: false }, { notMerge: true })
-      requestAnimationFrame(() => {
-        if (!chart.value) return
-        chart.value.setOption(
-          {
-            ...real,
-            animation: true,
-            animationDuration: 1100,
-            animationEasing: 'cubicOut',
-            animationDurationUpdate: 900,
-            animationEasingUpdate: 'cubicOut',
-          },
-          { notMerge: true },
-        )
-      })
+      try {
+        const real = build()
+        const zeroed = zeroSeriesData(real)
+        chart.value.setOption({ ...zeroed, animation: false }, { notMerge: true })
+        requestAnimationFrame(() => {
+          if (!chart.value) return
+          try {
+            chart.value.setOption(
+              {
+                ...real,
+                animation: true,
+                animationDuration: 1100,
+                animationEasing: 'cubicOut',
+                animationDurationUpdate: 900,
+                animationEasingUpdate: 'cubicOut',
+              },
+              { notMerge: true },
+            )
+          } catch (err) {
+            // 两阶段异常时兜底：直接渲染真实数据，避免空白图表
+            console.error('[lazyChart] animate render failed, fallback:', err)
+            chart.value.setOption(real, { notMerge: true })
+          }
+        })
+      } catch (err) {
+        console.error('[lazyChart] zero render failed, fallback:', err)
+        render()
+      }
       io?.disconnect()
     }
   }
