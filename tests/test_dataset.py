@@ -60,7 +60,7 @@ def test_json_exports_valid_and_consistent():
     if not data_dir.exists():
         pytest.skip("缺少前端数据目录")
     meta = json.loads((data_dir / "metadata.json").read_text(encoding="utf-8"))
-    assert meta["raw_record_count"] >= 100
+    assert meta.get("raw_project_record_count", meta.get("raw_record_count", 0)) >= 100
     assert "disclaimer" in meta and "官方濒危等级" in meta["disclaimer"]
     provinces = json.loads((data_dir / "provinces.json").read_text(encoding="utf-8"))
     assert sum(p["subitem_count"] for p in provinces) == meta["cleaned_subitem_count"]
