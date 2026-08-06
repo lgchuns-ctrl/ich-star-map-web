@@ -1,0 +1,27 @@
+{
+ "data_version": "v0.1.0-pilot",
+ "updated_at": "2026-08-06",
+ "scope": "试点：国家级非物质文化遗产代表性项目名录「民间文学」门类（含新增与扩展、全部批次）",
+ "raw_record_count": 251,
+ "cleaned_subitem_count": 251,
+ "distinct_project_count": 167,
+ "sources": [
+  {
+   "name": "中国非物质文化遗产网·国家级非物质文化遗产代表性项目名录",
+   "url": "http://www.ihchina.cn/Article/Index/getProject.html",
+   "accessed_at": "2026-08-06",
+   "type": "api",
+   "role": "主要来源"
+  }
+ ],
+ "indicators": {
+  "project_count": "独立项目数量",
+  "subitem_count": "地区子项数量",
+  "inheritor_coverage": "代表性传承人覆盖率（全量阶段实现）"
+ },
+ "disclaimer": "相关指标基于公开国家级名录及国家级代表性传承人数据构建，仅反映公开数据中的资源配置与覆盖情况，不代表官方濒危等级或保护成效评价。",
+ "notes": [
+  "试点数据仅覆盖「民间文学」门类，用于 MVP 验收；全量阶段将覆盖全部十大门类。",
+  "统计口径：地区子项（项目在各省申报形成的记录）；独立项目按项目编号去重。"
+ ]
+}

@@ -1,0 +1,228 @@
+:root {
+  /* 设计系统：星图 / 文化档案 / 现代东方 */
+  --bg-0: #0b101a;
+  --bg-1: #101826;
+  --bg-2: #16202f;
+  --ink-0: #f2e8d5;
+  --ink-1: #b9ad96;
+  --ink-2: #8a7f6a;
+  --gold: #d9b877;
+  --gold-dim: rgba(217, 184, 119, 0.35);
+  --cinnabar: #c2452e;
+  --jade: #5a9e8b;
+  --line: rgba(217, 184, 119, 0.18);
+  --card: rgba(255, 255, 255, 0.035);
+  --shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  --radius: 10px;
+  --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'SimSun', serif;
+  --font-sans: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+
+  --c-cat-1: #d9b877;
+  --c-cat-2: #c2452e;
+  --c-cat-3: #5a9e8b;
+  --c-cat-4: #7a6f9f;
+  --c-cat-5: #c98a4b;
+  --c-cat-6: #4f86c6;
+  --c-cat-7: #a75d7c;
+  --c-cat-8: #7c9a4e;
+  --c-cat-9: #3f8f8f;
+  --c-cat-10: #a08a3e;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  background: var(--bg-0);
+  color: var(--ink-0);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+#app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.container {
+  width: min(1200px, 94vw);
+  margin: 0 auto;
+}
+
+.page {
+  padding: 28px 0 64px;
+  flex: 1;
+}
+
+.page-title {
+  font-size: clamp(22px, 3vw, 32px);
+  margin: 0 0 6px;
+}
+
+.page-sub {
+  color: var(--ink-1);
+  margin: 0 0 22px;
+  font-size: 14px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.muted {
+  color: var(--ink-1);
+}
+
+.small {
+  font-size: 12px;
+  color: var(--ink-2);
+}
+
+.btn {
+  display: inline-block;
+  padding: 9px 18px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 999px;
+  color: var(--gold);
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.btn:hover {
+  background: var(--gold-dim);
+  color: var(--bg-0);
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold), #c9a15f);
+  color: var(--bg-0);
+  border-color: transparent;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #e7ca94, #d4ad6d);
+  color: var(--bg-0);
+}
+
+.btn-sm {
+  padding: 5px 12px;
+  font-size: 12px;
+}
+
+.select,
+.input {
+  background: var(--bg-1);
+  color: var(--ink-0);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 14px;
+  font-family: var(--font-sans);
+}
+
+.select:focus,
+.input:focus {
+  outline: 1px solid var(--gold-dim);
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.chip {
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink-1);
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.chip:hover {
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+
+.chip.active {
+  background: var(--gold-dim);
+  color: var(--bg-0);
+  border-color: transparent;
+}
+
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--ink-2);
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+@media (max-width: 860px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.disclaimer-box {
+  border-left: 3px solid var(--cinnabar);
+  background: rgba(194, 69, 46, 0.08);
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  font-size: 13px;
+  color: var(--ink-1);
+}
+
+.error-box {
+  border: 1px solid rgba(194, 69, 46, 0.5);
+  background: rgba(194, 69, 46, 0.1);
+  border-radius: 8px;
+  padding: 16px;
+  color: #f0b0a0;
+}
+
+.loading-box {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--ink-2);
+}

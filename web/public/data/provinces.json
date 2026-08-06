@@ -1,0 +1,281 @@
+[
+ {
+  "province": "山东省",
+  "map_name": "山东省",
+  "subitem_count": 27,
+  "project_count": 19,
+  "categories_covered": 1,
+  "new_count": 21,
+  "extension_count": 6
+ },
+ {
+  "province": "浙江省",
+  "map_name": "浙江省",
+  "subitem_count": 24,
+  "project_count": 20,
+  "categories_covered": 1,
+  "new_count": 23,
+  "extension_count": 1
+ },
+ {
+  "province": "湖北省",
+  "map_name": "湖北省",
+  "subitem_count": 21,
+  "project_count": 19,
+  "categories_covered": 1,
+  "new_count": 19,
+  "extension_count": 2
+ },
+ {
+  "province": "云南省",
+  "map_name": "云南省",
+  "subitem_count": 19,
+  "project_count": 18,
+  "categories_covered": 1,
+  "new_count": 17,
+  "extension_count": 2
+ },
+ {
+  "province": "新疆维吾尔自治区",
+  "map_name": "新疆维吾尔自治区",
+  "subitem_count": 19,
+  "project_count": 11,
+  "categories_covered": 1,
+  "new_count": 18,
+  "extension_count": 1
+ },
+ {
+  "province": "江苏省",
+  "map_name": "江苏省",
+  "subitem_count": 11,
+  "project_count": 7,
+  "categories_covered": 1,
+  "new_count": 5,
+  "extension_count": 6
+ },
+ {
+  "province": "贵州省",
+  "map_name": "贵州省",
+  "subitem_count": 11,
+  "project_count": 8,
+  "categories_covered": 1,
+  "new_count": 10,
+  "extension_count": 1
+ },
+ {
+  "province": "山西省",
+  "map_name": "山西省",
+  "subitem_count": 10,
+  "project_count": 10,
+  "categories_covered": 1,
+  "new_count": 10,
+  "extension_count": 0
+ },
+ {
+  "province": "河南省",
+  "map_name": "河南省",
+  "subitem_count": 10,
+  "project_count": 9,
+  "categories_covered": 1,
+  "new_count": 10,
+  "extension_count": 0
+ },
+ {
+  "province": "湖南省",
+  "map_name": "湖南省",
+  "subitem_count": 9,
+  "project_count": 8,
+  "categories_covered": 1,
+  "new_count": 7,
+  "extension_count": 2
+ },
+ {
+  "province": "青海省",
+  "map_name": "青海省",
+  "subitem_count": 9,
+  "project_count": 9,
+  "categories_covered": 1,
+  "new_count": 9,
+  "extension_count": 0
+ },
+ {
+  "province": "内蒙古自治区",
+  "map_name": "内蒙古自治区",
+  "subitem_count": 8,
+  "project_count": 7,
+  "categories_covered": 1,
+  "new_count": 6,
+  "extension_count": 2
+ },
+ {
+  "province": "北京市",
+  "map_name": "北京市",
+  "subitem_count": 8,
+  "project_count": 8,
+  "categories_covered": 1,
+  "new_count": 8,
+  "extension_count": 0
+ },
+ {
+  "province": "四川省",
+  "map_name": "四川省",
+  "subitem_count": 7,
+  "project_count": 6,
+  "categories_covered": 1,
+  "new_count": 7,
+  "extension_count": 0
+ },
+ {
+  "province": "甘肃省",
+  "map_name": "甘肃省",
+  "subitem_count": 7,
+  "project_count": 4,
+  "categories_covered": 1,
+  "new_count": 4,
+  "extension_count": 3
+ },
+ {
+  "province": "陕西省",
+  "map_name": "陕西省",
+  "subitem_count": 7,
+  "project_count": 6,
+  "categories_covered": 1,
+  "new_count": 4,
+  "extension_count": 3
+ },
+ {
+  "province": "广西壮族自治区",
+  "map_name": "广西壮族自治区",
+  "subitem_count": 6,
+  "project_count": 6,
+  "categories_covered": 1,
+  "new_count": 6,
+  "extension_count": 0
+ },
+ {
+  "province": "辽宁省",
+  "map_name": "辽宁省",
+  "subitem_count": 6,
+  "project_count": 6,
+  "categories_covered": 1,
+  "new_count": 6,
+  "extension_count": 0
+ },
+ {
+  "province": "安徽省",
+  "map_name": "安徽省",
+  "subitem_count": 5,
+  "project_count": 4,
+  "categories_covered": 1,
+  "new_count": 5,
+  "extension_count": 0
+ },
+ {
+  "province": "河北省",
+  "map_name": "河北省",
+  "subitem_count": 5,
+  "project_count": 5,
+  "categories_covered": 1,
+  "new_count": 4,
+  "extension_count": 1
+ },
+ {
+  "province": "广东省",
+  "map_name": "广东省",
+  "subitem_count": 4,
+  "project_count": 4,
+  "categories_covered": 1,
+  "new_count": 2,
+  "extension_count": 2
+ },
+ {
+  "province": "福建省",
+  "map_name": "福建省",
+  "subitem_count": 3,
+  "project_count": 3,
+  "categories_covered": 1,
+  "new_count": 3,
+  "extension_count": 0
+ },
+ {
+  "province": "西藏自治区",
+  "map_name": "西藏自治区",
+  "subitem_count": 3,
+  "project_count": 3,
+  "categories_covered": 1,
+  "new_count": 3,
+  "extension_count": 0
+ },
+ {
+  "province": "重庆市",
+  "map_name": "重庆市",
+  "subitem_count": 3,
+  "project_count": 3,
+  "categories_covered": 1,
+  "new_count": 3,
+  "extension_count": 0
+ },
+ {
+  "province": "上海市",
+  "map_name": "上海市",
+  "subitem_count": 2,
+  "project_count": 2,
+  "categories_covered": 1,
+  "new_count": 1,
+  "extension_count": 1
+ },
+ {
+  "province": "吉林省",
+  "map_name": "吉林省",
+  "subitem_count": 2,
+  "project_count": 2,
+  "categories_covered": 1,
+  "new_count": 2,
+  "extension_count": 0
+ },
+ {
+  "province": "中直单位",
+  "map_name": "",
+  "subitem_count": 1,
+  "project_count": 1,
+  "categories_covered": 1,
+  "new_count": 1,
+  "extension_count": 0
+ },
+ {
+  "province": "天津市",
+  "map_name": "天津市",
+  "subitem_count": 1,
+  "project_count": 1,
+  "categories_covered": 1,
+  "new_count": 0,
+  "extension_count": 1
+ },
+ {
+  "province": "宁夏回族自治区",
+  "map_name": "宁夏回族自治区",
+  "subitem_count": 1,
+  "project_count": 1,
+  "categories_covered": 1,
+  "new_count": 1,
+  "extension_count": 0
+ },
+ {
+  "province": "江西省",
+  "map_name": "江西省",
+  "subitem_count": 1,
+  "project_count": 1,
+  "categories_covered": 1,
+  "new_count": 1,
+  "extension_count": 0
+ },
+ {
+  "province": "黑龙江省",
+  "map_name": "黑龙江省",
+  "subitem_count": 1,
+  "project_count": 1,
+  "categories_covered": 1,
+  "new_count": 0,
+  "extension_count": 1
+ }
+]

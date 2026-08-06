@@ -1,0 +1,23 @@
+{
+ "data_sources": [
+  {
+   "name": "中国非物质文化遗产网·国家级非物质文化遗产代表性项目名录",
+   "url": "http://www.ihchina.cn/Article/Index/getProject.html",
+   "accessed_at": "2026-08-06",
+   "type": "api",
+   "role": "主要来源"
+  }
+ ],
+ "collection": "官方 JSON 接口，低频率、断点续传、原始响应归档",
+ "cleaning": "编号/名称/地区/批次/类别标准化；保留原始字段；人工修正留痕",
+ "indicators": {
+  "project_count": "独立项目数量",
+  "subitem_count": "地区子项数量",
+  "inheritor_coverage": "代表性传承人覆盖率（全量阶段实现）"
+ },
+ "limitations": [
+  "试点数据仅覆盖「民间文学」门类，用于 MVP 验收；全量阶段将覆盖全部十大门类。",
+  "统计口径：地区子项（项目在各省申报形成的记录）；独立项目按项目编号去重。"
+ ],
+ "ethics": "仅使用公开数据，不绕过访问控制，不伪造数据，不将缺失解释为不存在"
+}
