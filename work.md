@@ -313,3 +313,31 @@ chrome --headless=new --dump-dom http://localhost:4173/#/   # 首页渲染正常
 - type-check 0 错误；vitest 15/15；vite build 成功。
 
 验证脚本：`web/scripts/verify_lazy.mjs`（进站懒加载检查）、`web/scripts/verify_timing.mjs`（动画时序采样）。
+
+## 2026-08-06 部署上线记录（GitHub Pages）
+
+### 经过
+
+1. 推送到 GitHub 仓库 `lgchuns-ctrl/ich-star-map`：修复 git 代理（走 127.0.0.1:7892）、清除误提交的 57MB PPT（filter-repo，仓库 68.7MB→9.75MB）、修复 vitest 4 与 vite 5 不兼容导致的 CI EUSAGE（降级 vitest 3）。
+2. GitHub Pages 的 GitHub Actions 部署管道在该账号下反复失败（queued 卡死 → in_progress 卡死 → deployment failed）。已排查并修复配置（Source=GitHub Actions、API 取消旧部署、configure-pages、cancel-in-progress:false、20 分钟超时、删除重建 Pages、新仓库测试）；产物结构验证正确（index.html 在根），邮箱已验证——判定为账号/管道级问题。
+3. 最终改用 gh-pages 分支 + Deploy from a branch 传统管道：构建 web/dist 提交到独立 gh-pages 分支（含 .nojekyll），Pages Source 设为 gh-pages / (root)，部署成功。
+
+### 上线地址
+
+- 网站：https://lgchuns-ctrl.github.io/ich-star-map-web/
+- 仓库：https://github.com/lgchuns-ctrl/ich-star-map-web
+
+### 后续更新网站的流程（Actions 管道不可用时的替代）
+
+```powershell
+cd F:\大创\非遗星图——国家级非遗项目传承观察
+cd web && npm run build && cd ..
+git checkout gh-pages
+Copy-Item -Recurse -Force web\dist\* .
+git add -A
+git commit -m "update site"
+git push origin gh-pages
+git checkout main
+```
+
+注意：推 main 会触发 Deploy to GitHub Pages 工作流，其 deploy 步骤在此账号下仍会失败（红色叉），不影响已上线站点；可到 Actions 设置中禁用该工作流避免噪音。
