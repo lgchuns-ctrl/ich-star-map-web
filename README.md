@@ -48,6 +48,8 @@ python scripts/collect/collect_ihchina.py --max-records 200 --interval 1.0
 ```bash
 python scripts/clean/clean_pilot.py
 python scripts/validate/validate_pilot.py
+python scripts/clean/clean_full.py          # 全量：子项/项目/传承人/关联
+python scripts/validate/validate_full.py
 ```
 
 输出：
@@ -59,10 +61,21 @@ python scripts/validate/validate_pilot.py
 ### 4. 导出前端数据
 
 ```bash
-python scripts/export/export_pilot_json.py
+python scripts/export/export_full_json.py
 ```
 
 输出到 `web/public/data/`。
+
+### 4b. 全量采集与数据分析
+
+```bash
+# 十大门类项目/子项（type=1..10，约 3610 条）
+python scripts/collect/collect_ihchina.py --scope category --value 1 --max-records 1000
+# 代表性传承人（约 3995 条）
+python scripts/collect/collect_inheritors.py --max-records 4200
+# 阶段D 分析（地区/批次/类别/传承资源 + 可追溯结论）
+python scripts/analyze/analyze_full.py
+```
 
 ### 5. 前端运行与构建
 
@@ -84,11 +97,11 @@ npm test
 npm run build
 ```
 
-## MVP 验收状态（阶段A/B）
+## 全量数据状态（阶段A-D）
 
-- 真实公开数据：中国非物质文化遗产网接口采集「民间文学」门类 251 条（原始归档可追溯）；
-- 数据清洗与验证：全部质量检查通过（0 缺失、0 重复、地区映射 31/31）；
-- 前端：省级地图 + 类别/批次/类型/地区筛选 + 项目详情 + 搜索；
+- 真实公开数据：项目/子项 3610 条（1557 个独立项目）、传承人 3995 条，与官方汇总比对一致（传承人含第六批，口径差异见质量报告）；
+- 数据清洗与验证：全部质量检查通过（0 缺失、0 重复、地区映射全部成功、传承人匹配率 99.35%）；
+- 前端：省级地图（指标可切换）+ 类别/批次/类型/地区筛选 + 项目详情 + 搜索 + 传承资源观察页；
 - 冒烟测试：headless Chrome 渲染首页与地图页，无页面 JS 错误；
 - 构建产物：`web/dist`（见 [网页设计说明](docs/网页设计说明.md) 中的体积分析）。
 
