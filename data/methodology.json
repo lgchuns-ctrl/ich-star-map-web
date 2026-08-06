@@ -1,0 +1,32 @@
+{
+ "data_sources": [
+  {
+   "name": "中国非物质文化遗产网·国家级非物质文化遗产代表性项目名录",
+   "url": "http://www.ihchina.cn/Article/Index/getProject.html",
+   "accessed_at": "2026-08-06",
+   "type": "api",
+   "role": "主要来源"
+  },
+  {
+   "name": "中国非物质文化遗产网·国家级非遗代表性传承人名单",
+   "url": "http://www.ihchina.cn/art/representative.html",
+   "accessed_at": "2026-08-06",
+   "type": "api",
+   "role": "主要来源"
+  }
+ ],
+ "collection": "官方 JSON 接口低频率采集：项目接口（category_id=16，十大门类共 3610 条）、传承人接口（3995 条）；断点续传、原始响应归档、请求日志",
+ "cleaning": "编号/名称/地区/批次/类别标准化；子项组合键按真实数据调整（加入 project_name）；传承人按 child_num 关联",
+ "indicators": {
+  "project_count": "独立项目数量",
+  "subitem_count": "地区子项数量",
+  "inheritor_coverage": "已匹配到代表性传承人的子项数 ÷ 子项总数",
+  "inheritors_per_100_subitems": "代表性传承人数 ÷ 地区子项数 × 100"
+ },
+ "limitations": [
+  "传承人接口返回 3995 条记录（含 2025 年第六批 942 条与历史批次），官方截至 2023 年公开汇总为 3059 人，差异原因见数据质量报告。",
+  "统计口径：地区子项按申报地区展开；独立项目按项目编号去重。",
+  "传承人-子项匹配优先按 child_num 精确匹配，回退到项目编号+省份；26 条存在多候选，待人工确认。"
+ ],
+ "ethics": "仅使用公开数据，不绕过访问控制，不伪造数据，不将缺失解释为不存在，不把相关描述为因果"
+}

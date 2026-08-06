@@ -1,0 +1,39 @@
+{
+ "data_version": "v0.2.0-full",
+ "updated_at": "2026-08-06",
+ "scope": "全量：国家级非遗代表性项目名录十大门类（含新增与扩展、全部批次）与国家级代表性传承人公开名单",
+ "raw_project_record_count": 3610,
+ "raw_inheritor_record_count": 3995,
+ "cleaned_subitem_count": 3610,
+ "distinct_project_count": 1557,
+ "inheritor_count": 3995,
+ "inheritor_match_rate": 0.9935,
+ "sources": [
+  {
+   "name": "中国非物质文化遗产网·国家级非物质文化遗产代表性项目名录",
+   "url": "http://www.ihchina.cn/Article/Index/getProject.html",
+   "accessed_at": "2026-08-06",
+   "type": "api",
+   "role": "主要来源"
+  },
+  {
+   "name": "中国非物质文化遗产网·国家级非遗代表性传承人名单",
+   "url": "http://www.ihchina.cn/art/representative.html",
+   "accessed_at": "2026-08-06",
+   "type": "api",
+   "role": "主要来源"
+  }
+ ],
+ "indicators": {
+  "project_count": "独立项目数量",
+  "subitem_count": "地区子项数量",
+  "inheritor_coverage": "已匹配到代表性传承人的子项数 ÷ 子项总数",
+  "inheritors_per_100_subitems": "代表性传承人数 ÷ 地区子项数 × 100"
+ },
+ "disclaimer": "相关指标基于公开国家级名录及国家级代表性传承人数据构建，仅反映公开数据中的资源配置与覆盖情况，不代表官方濒危等级或保护成效评价。",
+ "notes": [
+  "传承人接口返回 3995 条记录（含 2025 年第六批 942 条与历史批次），官方截至 2023 年公开汇总为 3059 人，差异原因见数据质量报告。",
+  "统计口径：地区子项按申报地区展开；独立项目按项目编号去重。",
+  "传承人-子项匹配优先按 child_num 精确匹配，回退到项目编号+省份；26 条存在多候选，待人工确认。"
+ ]
+}
