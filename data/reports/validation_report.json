@@ -1,0 +1,69 @@
+{
+  "dataset": "pilot（民间文学门类）",
+  "rows": 251,
+  "checks": {
+    "project_code_format": {
+      "pass": true,
+      "examples": []
+    },
+    "required_fields": {
+      "pass": true,
+      "missing": {
+        "project_code": 0,
+        "project_name": 0,
+        "category": 0,
+        "batch_no": 0,
+        "publish_year": 0,
+        "entry_type": 0,
+        "region_raw": 0,
+        "province": 0
+      }
+    },
+    "duplicates": {
+      "pass": true,
+      "count": 0
+    },
+    "batch_legal": {
+      "pass": true,
+      "bad": 0,
+      "values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    "category_legal": {
+      "pass": true,
+      "bad": 0,
+      "values": [
+        "民间文学"
+      ]
+    },
+    "province_mapping": {
+      "pass": true,
+      "unmapped": 0,
+      "unknown_values": []
+    },
+    "entry_type": {
+      "pass": true,
+      "values": {
+        "new": 216,
+        "extension": 35
+      }
+    },
+    "publish_year": {
+      "pass": true,
+      "bad": 0,
+      "values": [
+        "2006",
+        "2008",
+        "2011",
+        "2014",
+        "2021"
+      ]
+    }
+  },
+  "overall_pass": true
+}

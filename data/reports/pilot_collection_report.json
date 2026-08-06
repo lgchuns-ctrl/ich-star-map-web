@@ -1,0 +1,19 @@
+{
+  "requests": 3,
+  "success": 3,
+  "failed": 0,
+  "raw_records": 251,
+  "unique_records": 251,
+  "duplicates": 0,
+  "sources": [
+    "http://www.ihchina.cn/Article/Index/getProject.html"
+  ],
+  "collection_time_start": "2026-08-06T10:14:53+00:00",
+  "collection_time_end": "2026-08-06T10:14:57+00:00",
+  "failed_details": [],
+  "known_issues": [
+    "试点数据仅覆盖「民间文学」门类（type=1），用于验证采集与清洗结构，不代表全国总量。",
+    "接口按「地区子项」口径返回 3610 条记录，试点采集其中民间文学门类 251 条。",
+    "keywords 参数在本接口下行为不稳定，试点阶段不依赖服务端关键词检索，搜索在前端本地完成。"
+  ]
+}
