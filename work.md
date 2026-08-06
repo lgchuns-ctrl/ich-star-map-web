@@ -229,3 +229,31 @@ chrome --headless=new --dump-dom http://localhost:4173/#/   # 首页渲染正常
 
 - type-check 0 错误；vitest 10/10；vite build 成功；
 - headless 冒烟：`数据口径说明` 全页仅出现 1 次且位于 `#notes`，动效类（reveal-up/rise）已挂载，无页面 JS 错误。
+
+## 2026-08-06 条形图生长动画修复（两阶段渲染）
+
+### 问题
+
+用户反馈条形图“生长”动画仍不生效。
+
+### 根因（经验证定位）
+
+1. 早期版本图表在进入视口前 240px 就提前初始化，ECharts 首次渲染动画（1000ms）在屏幕外已播完，用户滚动到图表时看到的是静止的满高柱子；
+2. ECharts 首次渲染动画依赖初始化与数据渲染时机，单独设置 animation 字段并不可靠。
+
+### 修复
+
+- `web/src/utils/lazyChart.ts` 改为**两阶段渲染**：图表进入视口时先用 0 值数据（关闭动画）渲染一帧，下一帧再渲染真实数据并开启动画（duration 1100ms / update 900ms），强制触发“柱子从 0 长出来”的更新动画；
+- 懒加载触发时机收紧为进入视口（rootMargin 0px 0px -40px），动画开始即用户可见；
+- 新增 `zeroSeriesData`（数字/对象值/heatmap 三元组/雷达多维值归零）与 4 项单测。
+
+### 验证（真实时间 CDP 采样）
+
+- 编写 `web/scripts/verify_anim.mjs`（Chrome DevTools 协议），真实浏览器采样柱高：
+  `t=300ms 21.5px → t=900ms 237.9px → t=2600ms 243px`，动画生长确认生效；
+- 无头虚拟时间下 rAF 动画被冻结，不能用于验证动画，已改用真实时间验证；
+- type-check 0 错误；vitest 14/14（新增 lazyChart 单测）；vite build 成功。
+
+### 提醒
+
+预览服务器与浏览器可能缓存旧 JS，查看效果前请强制刷新（Ctrl+F5）。
