@@ -1,0 +1,109 @@
+{
+  "dataset": "全量（十大门类）",
+  "counts": {
+    "subitems": 3610,
+    "distinct_projects": 1557,
+    "inheritors": 3995
+  },
+  "checks": {
+    "project_code_format": {
+      "pass": true,
+      "bad": 0
+    },
+    "required_fields": {
+      "pass": true,
+      "missing": {
+        "project_code": 0,
+        "project_name": 0,
+        "category": 0,
+        "batch_no": 0,
+        "publish_year": 0,
+        "entry_type": 0,
+        "region_raw": 0,
+        "province": 0
+      }
+    },
+    "duplicates": {
+      "pass": true,
+      "count": 0,
+      "note": "组合键已加入 project_name；试点阶段的口径在多个子项共址时过严，已在全量验证中调整，实例：津门法鼓(挂甲寺庆音法鼓) 与 (杨家庄永音法鼓)、藏戏多个剧种变体、中医诊疗法多个流派。"
+    },
+    "batch_legal": {
+      "pass": true,
+      "values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    "publish_year": {
+      "pass": true,
+      "values": [
+        "2006",
+        "2008",
+        "2011",
+        "2014",
+        "2021"
+      ]
+    },
+    "category_legal": {
+      "pass": true,
+      "values": [
+        "传统体育、游艺与杂技",
+        "传统医药",
+        "传统戏剧",
+        "传统技艺",
+        "传统美术",
+        "传统舞蹈",
+        "传统音乐",
+        "曲艺",
+        "民俗",
+        "民间文学"
+      ]
+    },
+    "province_mapping": {
+      "pass": true,
+      "unmapped": []
+    },
+    "inheritor_batch": {
+      "pass": true,
+      "values": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ]
+    },
+    "inheritor_match": {
+      "pass": true,
+      "match_rate": 0.9935,
+      "counts": {
+        "matched": 3969,
+        "multiple_candidates": 26
+      }
+    }
+  },
+  "overall_pass": true,
+  "official_comparison": {
+    "subitems": {
+      "collected": 3610,
+      "official": 3610,
+      "delta": 0
+    },
+    "distinct_projects": {
+      "collected": 1557,
+      "official": 1557,
+      "delta": 0
+    },
+    "inheritors": {
+      "collected": 3995,
+      "official": 3059,
+      "delta": 936
+    },
+    "note": "官方总量仅作校验依据；传承人官方口径为截至2023年共3059人，本站接口返回3995条（含2025年第六批与已故传承人等），差异在质量报告中说明。"
+  }
+}
