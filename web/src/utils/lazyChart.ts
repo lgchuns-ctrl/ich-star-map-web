@@ -71,23 +71,26 @@ export function useLazyChart(
         chart.value.setOption({ ...zeroed, animation: false }, { notMerge: true })
         requestAnimationFrame(() => {
           if (!chart.value) return
-          try {
-            chart.value.setOption(
-              {
-                ...real,
-                animation: true,
-                animationDuration: 1100,
-                animationEasing: 'cubicOut',
-                animationDurationUpdate: 900,
-                animationEasingUpdate: 'cubicOut',
-              },
-              { notMerge: true },
-            )
-          } catch (err) {
-            // 两阶段异常时兜底：直接渲染真实数据，避免空白图表
-            console.error('[lazyChart] animate render failed, fallback:', err)
-            chart.value.setOption(real, { notMerge: true })
-          }
+          window.setTimeout(() => {
+            if (!chart.value) return
+            try {
+              chart.value.setOption(
+                {
+                  ...real,
+                  animation: true,
+                  animationDuration: 1600,
+                  animationEasing: 'cubicOut',
+                  animationDurationUpdate: 1300,
+                  animationEasingUpdate: 'cubicOut',
+                },
+                { notMerge: true },
+              )
+            } catch (err) {
+              // 两阶段异常时兜底：直接渲染真实数据，避免空白图表
+              console.error('[lazyChart] animate render failed, fallback:', err)
+              chart.value.setOption(real, { notMerge: true })
+            }
+          }, 180)
         })
       } catch (err) {
         console.error('[lazyChart] zero render failed, fallback:', err)
@@ -102,7 +105,7 @@ export function useLazyChart(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) init()
       },
-      { rootMargin: '0px 0px -40px 0px' },
+      { rootMargin: '0px', threshold: 0.6 },
     )
     if (el.value) io.observe(el.value)
   })
