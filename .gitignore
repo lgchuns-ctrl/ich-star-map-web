@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+*.egg-info/
+
+# Node
+node_modules/
+web/dist/
+web/node_modules/
+npm-debug.log*
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# 临时与缓存（原始数据不忽略，缓存请求日志保留以便追溯）
+data/raw/request_logs/response_cache/
+*.tmp
+
+# 本地环境
+.env
+.env.*
