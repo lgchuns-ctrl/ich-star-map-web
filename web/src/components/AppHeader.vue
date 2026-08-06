@@ -1,24 +1,28 @@
 <script setup lang="ts">
-const links = [
-  { to: '/', label: '首页' },
-  { to: '/map', label: '全国分布' },
-  { to: '/inheritors', label: '传承资源观察' },
-  { to: '/search', label: '寻找一项非遗' },
-  { to: '/data', label: '数据与方法' },
-]
+import { NAV_SECTIONS } from '@/config/nav'
+import { useScrollSpy } from '@/utils/scroll'
+
+const ids = NAV_SECTIONS.map((s) => s.id)
+const { activeId } = useScrollSpy(ids)
 </script>
 
 <template>
   <header class="site-header">
     <div class="container header-inner">
-      <router-link to="/" class="brand">
+      <a href="#hero" class="brand">
         <span class="brand-star">✦</span>
         <span>非遗星图</span>
-      </router-link>
+      </a>
       <nav class="nav">
-        <router-link v-for="l in links" :key="l.to" :to="l.to" class="nav-link">
-          {{ l.label }}
-        </router-link>
+        <a
+          v-for="s in NAV_SECTIONS"
+          :key="s.id"
+          :href="`#${s.id}`"
+          class="nav-link"
+          :class="{ active: activeId === s.id }"
+        >
+          {{ s.label }}
+        </a>
       </nav>
     </div>
   </header>
@@ -73,6 +77,10 @@ const links = [
   color: var(--gold);
   background: rgba(217, 184, 119, 0.14);
 }
+.nav-link.active {
+  color: var(--gold);
+  background: rgba(217, 184, 119, 0.14);
+}
 @media (max-width: 640px) {
   .brand {
     font-size: 16px;
@@ -80,6 +88,11 @@ const links = [
   .nav-link {
     font-size: 12px;
     padding: 5px 8px;
+  }
+  .nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 </style>

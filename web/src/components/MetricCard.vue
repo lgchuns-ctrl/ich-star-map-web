@@ -1,14 +1,19 @@
 <script setup lang="ts">
-defineProps<{
+withDefaults(
+  defineProps<{
   label: string
-  value: number | string
+  value?: number | string
   note?: string
-}>()
+}>(),
+  { value: '' },
+)
 </script>
 
 <template>
   <div class="metric card">
-    <div class="metric-value">{{ value }}</div>
+    <div class="metric-value">
+      <slot name="value">{{ value }}</slot>
+    </div>
     <div class="metric-label">{{ label }}</div>
     <div v-if="note" class="metric-note">{{ note }}</div>
   </div>

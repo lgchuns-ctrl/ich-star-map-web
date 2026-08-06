@@ -166,3 +166,29 @@ export const MAP_METRIC_LABELS: Record<MapMetric, string> = {
   inheritor: '传承人数',
   category: '类别覆盖数',
 }
+
+export const CATEGORY_COLORS: Record<string, string> = {
+  '民间文学': '#d9b877',
+  '传统音乐': '#c2452e',
+  '传统舞蹈': '#5a9e8b',
+  '传统戏剧': '#7a6f9f',
+  '曲艺': '#c98a4b',
+  '传统体育、游艺与杂技': '#4f86c6',
+  '传统美术': '#a75d7c',
+  '传统技艺': '#7c9a4e',
+  '传统医药': '#3f8f8f',
+  '民俗': '#a08a3e',
+}
+
+export const CATEGORY_ORDER = [
+  '民间文学',
+  '传统音乐',
+  '传统舞蹈',
+  '传统戏剧',
+  '曲艺',
+  '传统体育、游艺与杂技',
+  '传统美术',
+  '传统技艺',
+  '传统医药',
+  '民俗',
+] as const

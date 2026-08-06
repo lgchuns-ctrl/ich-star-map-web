@@ -45,6 +45,10 @@ body {
   line-height: 1.7;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 #app {
   min-height: 100vh;
   display: flex;
@@ -77,6 +81,39 @@ h4 {
 .page {
   padding: 28px 0 64px;
   flex: 1;
+}
+
+.site-section {
+  padding: 60px 0 70px;
+  border-bottom: 1px solid var(--line);
+  scroll-margin-top: 74px;
+}
+
+.site-section:last-of-type {
+  border-bottom: none;
+}
+
+.section-head {
+  margin-bottom: 26px;
+}
+
+.section-kicker {
+  color: var(--gold);
+  letter-spacing: 0.28em;
+  font-size: 12px;
+  margin: 0 0 8px;
+}
+
+.section-title {
+  font-size: clamp(22px, 3vw, 30px);
+  margin: 0 0 8px;
+}
+
+.section-sub {
+  color: var(--ink-1);
+  font-size: 14px;
+  margin: 0;
+  max-width: 780px;
 }
 
 .page-title {
@@ -123,6 +160,23 @@ h4 {
   background: var(--gold-dim);
   color: var(--bg-0);
   text-decoration: none;
+}
+
+.card.hoverable {
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.card.hoverable:hover {
+  transform: translateY(-4px);
+  border-color: var(--gold-dim);
+  box-shadow: 0 14px 44px rgba(0, 0, 0, 0.45);
+}
+
+.card.hoverable:active {
+  transform: translateY(-1px);
 }
 
 .btn-primary {
