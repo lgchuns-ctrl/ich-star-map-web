@@ -1,9 +1,21 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+
+const props = withDefaults(
+  defineProps<{
+    delay?: number
+    direction?: 'up' | 'left' | 'right'
+  }>(),
+  { delay: 0, direction: 'up' },
+)
 
 const el = ref<HTMLDivElement | null>(null)
 const visible = ref(false)
 let observer: IntersectionObserver | null = null
+
+const style = computed(() => ({
+  transitionDelay: `${props.delay}ms`,
+}))
 
 onMounted(() => {
   observer = new IntersectionObserver(
@@ -22,7 +34,12 @@ onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>
-  <div ref="el" class="reveal" :class="{ revealed: visible }">
+  <div
+    ref="el"
+    class="reveal"
+    :class="[`reveal-${props.direction}`, { revealed: visible }]"
+    :style="style"
+  >
     <slot />
   </div>
 </template>
@@ -30,10 +47,19 @@ onBeforeUnmount(() => observer?.disconnect())
 <style scoped>
 .reveal {
   opacity: 0;
-  transform: translateY(26px);
   transition:
     opacity 0.7s ease,
     transform 0.7s ease;
+  will-change: opacity, transform;
+}
+.reveal-up {
+  transform: translateY(30px);
+}
+.reveal-left {
+  transform: translateX(-40px);
+}
+.reveal-right {
+  transform: translateX(40px);
 }
 .revealed {
   opacity: 1;

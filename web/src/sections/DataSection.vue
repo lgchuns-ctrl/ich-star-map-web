@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import DataDisclaimer from '@/components/DataDisclaimer.vue'
 import Reveal from '@/components/Reveal.vue'
 import { useAppStore } from '@/stores/appStore'
 
@@ -151,9 +150,6 @@ const docs = [
           </div>
         </Reveal>
 
-        <Reveal>
-          <DataDisclaimer />
-        </Reveal>
       </template>
 
       <div v-else-if="store.error" class="error-box">{{ store.error }}</div>

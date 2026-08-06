@@ -3,7 +3,6 @@ import type { EChartsOption } from 'echarts'
 import { computed, ref, watch } from 'vue'
 import MetricCard from '@/components/MetricCard.vue'
 import AnimatedNumber from '@/components/AnimatedNumber.vue'
-import DataDisclaimer from '@/components/DataDisclaimer.vue'
 import Reveal from '@/components/Reveal.vue'
 import { useAppStore } from '@/stores/appStore'
 import { useLazyChart } from '@/utils/lazyChart'
@@ -33,6 +32,9 @@ const categoryRows = computed(() =>
 const barChart = useLazyChart(chartEl, () => {
   const top = provinceRows.value.slice(0, 15)
   const option: EChartsOption = {
+    animation: true,
+    animationDuration: 1000,
+    animationEasing: 'cubicOut',
     grid: { left: 90, right: 40, top: 20, bottom: 30 },
     tooltip: {
       trigger: 'axis',
@@ -92,24 +94,32 @@ watch(
 
       <Reveal>
         <div class="grid-4">
-          <MetricCard label="传承人公开记录" :value="totalInheritors" note="含第六批(2025)等全部批次">
-            <template #value><AnimatedNumber :value="totalInheritors" /></template>
-          </MetricCard>
-          <MetricCard
-            label="传承人-子项匹配率"
-            :value="`${(matchRate * 100).toFixed(2)}%`"
-            note="按公开编号+地区关联"
-          />
-          <MetricCard
-            label="全国每百子项传承人数"
-            :value="nationalPer100.toFixed(1)"
-            note="传承人 ÷ 子项 × 100"
-          >
-            <template #value><AnimatedNumber :value="nationalPer100" :decimals="1" /></template>
-          </MetricCard>
-          <MetricCard label="有传承人公开记录的省份" :value="provincesWithInheritors" note="覆盖省级地区">
-            <template #value><AnimatedNumber :value="provincesWithInheritors" /></template>
-          </MetricCard>
+          <Reveal :delay="0">
+            <MetricCard label="传承人公开记录" :value="totalInheritors" note="含第六批(2025)等全部批次">
+              <template #value><AnimatedNumber :value="totalInheritors" /></template>
+            </MetricCard>
+          </Reveal>
+          <Reveal :delay="100">
+            <MetricCard
+              label="传承人-子项匹配率"
+              :value="`${(matchRate * 100).toFixed(2)}%`"
+              note="按公开编号+地区关联"
+            />
+          </Reveal>
+          <Reveal :delay="200">
+            <MetricCard
+              label="全国每百子项传承人数"
+              :value="nationalPer100.toFixed(1)"
+              note="传承人 ÷ 子项 × 100"
+            >
+              <template #value><AnimatedNumber :value="nationalPer100" :decimals="1" /></template>
+            </MetricCard>
+          </Reveal>
+          <Reveal :delay="300">
+            <MetricCard label="有传承人公开记录的省份" :value="provincesWithInheritors" note="覆盖省级地区">
+              <template #value><AnimatedNumber :value="provincesWithInheritors" /></template>
+            </MetricCard>
+          </Reveal>
         </div>
       </Reveal>
 
@@ -117,13 +127,15 @@ watch(
         <div class="section-subhead">
           <h3>传承人公开数量 TOP15（省级）</h3>
         </div>
-        <div class="card chart-card hoverable">
-          <div ref="chartEl" class="chart chart-lg"></div>
-        </div>
+        <Reveal>
+          <div class="card chart-card hoverable">
+            <div ref="chartEl" class="chart chart-lg"></div>
+          </div>
+        </Reveal>
       </Reveal>
 
-      <Reveal>
-        <div class="grid-2">
+      <div class="grid-2">
+        <Reveal direction="left">
           <div class="card table-card">
             <h3>省级传承资源配置</h3>
             <table class="data-table">
@@ -152,6 +164,8 @@ watch(
               </tbody>
             </table>
           </div>
+        </Reveal>
+        <Reveal direction="right" :delay="140">
           <div class="card table-card">
             <h3>类别传承资源对比</h3>
             <table class="data-table">
@@ -180,8 +194,8 @@ watch(
               </tbody>
             </table>
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
+      </div>
 
       <Reveal>
         <div class="card">
@@ -194,10 +208,6 @@ watch(
           </ul>
         </div>
       </Reveal>
-
-      <div class="note-block">
-        <DataDisclaimer />
-      </div>
     </div>
   </section>
 </template>
@@ -267,8 +277,5 @@ watch(
 .indicator-list li {
   margin-bottom: 8px;
   color: var(--ink-1);
-}
-.note-block {
-  margin-top: 18px;
 }
 </style>

@@ -3,7 +3,6 @@ import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 import { computed, ref, watch } from 'vue'
 import Reveal from '@/components/Reveal.vue'
-import DataDisclaimer from '@/components/DataDisclaimer.vue'
 import { useAppStore } from '@/stores/appStore'
 import { CATEGORY_COLORS, CATEGORY_ORDER } from '@/types'
 import { useLazyChart } from '@/utils/lazyChart'
@@ -24,6 +23,9 @@ const batchLabels = computed(() =>
 const batchBar = useLazyChart(barEl, () => {
   const batches = store.dataset?.batches ?? []
   return {
+    animation: true,
+    animationDuration: 1000,
+    animationEasing: 'cubicOut',
     tooltip: {
       trigger: 'axis',
       backgroundColor: 'rgba(16,24,38,0.92)',
@@ -104,6 +106,9 @@ const catBatch = useLazyChart(catEl, () => {
     }),
   }))
   return {
+    animation: true,
+    animationDuration: 1000,
+    animationEasing: 'cubicOut',
     tooltip: {
       trigger: 'axis',
       backgroundColor: 'rgba(16,24,38,0.92)',
@@ -158,6 +163,9 @@ const provBatch = useLazyChart(heatEl, () => {
   })
   const max = Math.max(1, ...data.map((x) => x[2]))
   return {
+    animation: true,
+    animationDuration: 700,
+    animationEasing: 'cubicOut',
     tooltip: {
       position: 'top',
       backgroundColor: 'rgba(16,24,38,0.92)',
@@ -229,27 +237,27 @@ watch(
 
       <Reveal>
         <div class="grid-2">
+          <Reveal direction="left">
           <div class="card chart-card hoverable">
             <h3>各批次新增与扩展</h3>
             <div ref="barEl" class="chart chart-lg"></div>
           </div>
+          </Reveal>
+          <Reveal direction="right" :delay="140">
           <div class="card chart-card hoverable">
             <h3>批次 × 类别构成</h3>
             <div ref="catEl" class="chart chart-lg"></div>
           </div>
+          </Reveal>
         </div>
       </Reveal>
 
-      <Reveal>
+      <Reveal :delay="80">
         <div class="card chart-card hoverable heat-card">
           <h3>省份 × 批次子项热力图（TOP15）</h3>
           <div ref="heatEl" class="chart chart-lg"></div>
         </div>
       </Reveal>
-
-      <div class="note-block">
-        <DataDisclaimer />
-      </div>
     </div>
   </section>
 </template>
@@ -270,9 +278,6 @@ watch(
 }
 .heat-card {
   margin-top: 16px;
-}
-.note-block {
-  margin-top: 18px;
 }
 @media (max-width: 860px) {
   .chart-lg {

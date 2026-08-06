@@ -3,7 +3,6 @@ import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 import { computed, ref, watch } from 'vue'
 import Reveal from '@/components/Reveal.vue'
-import DataDisclaimer from '@/components/DataDisclaimer.vue'
 import { useAppStore } from '@/stores/appStore'
 import { CATEGORY_COLORS, CATEGORY_ORDER } from '@/types'
 import { useLazyChart } from '@/utils/lazyChart'
@@ -30,6 +29,9 @@ const maxSubitems = computed(() =>
 const distChart = useLazyChart(barEl, () => {
   const rows = catRows.value
   const option: EChartsOption = {
+    animation: true,
+    animationDuration: 1000,
+    animationEasing: 'cubicOut',
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -71,6 +73,9 @@ const distChart = useLazyChart(barEl, () => {
 const covChart = useLazyChart(covEl, () => {
   const rows = catRows.value
   return {
+    animation: true,
+    animationDuration: 1000,
+    animationEasing: 'cubicOut',
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
@@ -134,51 +139,51 @@ watch(
 
       <Reveal>
         <div class="cat-grid">
-          <div
-            v-for="c in catRows"
-            :key="c.category"
-            class="card cat-card hoverable"
-            :style="{ '--cat': CATEGORY_COLORS[c.category] }"
-          >
-            <h3 class="cat-name">{{ c.category }}</h3>
-            <div class="cat-stats">
-              <span><b>{{ c.subitem_count }}</b> 子项</span>
-              <span><b>{{ c.project_count }}</b> 项目</span>
-              <span><b>{{ c.inheritor_count }}</b> 传承人</span>
+          <Reveal v-for="(c, i) in catRows" :key="c.category" :delay="i * 55">
+            <div
+              class="card cat-card hoverable"
+              :style="{ '--cat': CATEGORY_COLORS[c.category] }"
+            >
+              <h3 class="cat-name">{{ c.category }}</h3>
+              <div class="cat-stats">
+                <span><b>{{ c.subitem_count }}</b> 子项</span>
+                <span><b>{{ c.project_count }}</b> 项目</span>
+                <span><b>{{ c.inheritor_count }}</b> 传承人</span>
+              </div>
+              <div class="cat-bar">
+                <div
+                  class="cat-bar-fill"
+                  :style="{
+                    width: `${Math.round((c.subitem_count / maxSubitems) * 100)}%`,
+                    background: CATEGORY_COLORS[c.category],
+                  }"
+                ></div>
+              </div>
+              <div class="cat-foot small muted">
+                覆盖 {{ c.province_count }} 省 · {{ c.batch_count }} 批次 ·
+                覆盖率 {{ c.inheritor_coverage ? (c.inheritor_coverage * 100).toFixed(1) : 0 }}%
+              </div>
             </div>
-            <div class="cat-bar">
-              <div
-                class="cat-bar-fill"
-                :style="{
-                  width: `${Math.round((c.subitem_count / maxSubitems) * 100)}%`,
-                  background: CATEGORY_COLORS[c.category],
-                }"
-              ></div>
-            </div>
-            <div class="cat-foot small muted">
-              覆盖 {{ c.province_count }} 省 · {{ c.batch_count }} 批次 ·
-              覆盖率 {{ c.inheritor_coverage ? (c.inheritor_coverage * 100).toFixed(1) : 0 }}%
-            </div>
-          </div>
+          </Reveal>
         </div>
       </Reveal>
 
       <Reveal>
         <div class="grid-2">
-          <div class="card chart-card hoverable">
-            <h3>类别规模分布</h3>
-            <div ref="barEl" class="chart chart-lg"></div>
-          </div>
-          <div class="card chart-card hoverable">
-            <h3>传承人覆盖率（按类别）</h3>
-            <div ref="covEl" class="chart chart-lg"></div>
-          </div>
+          <Reveal direction="left">
+            <div class="card chart-card hoverable">
+              <h3>类别规模分布</h3>
+              <div ref="barEl" class="chart chart-lg"></div>
+            </div>
+          </Reveal>
+          <Reveal direction="right" :delay="140">
+            <div class="card chart-card hoverable">
+              <h3>传承人覆盖率（按类别）</h3>
+              <div ref="covEl" class="chart chart-lg"></div>
+            </div>
+          </Reveal>
         </div>
       </Reveal>
-
-      <div class="note-block">
-        <DataDisclaimer />
-      </div>
     </div>
   </section>
 </template>
@@ -231,9 +236,6 @@ watch(
 .chart-lg {
   height: 420px;
   width: 100%;
-}
-.note-block {
-  margin-top: 18px;
 }
 @media (max-width: 860px) {
   .chart-lg {

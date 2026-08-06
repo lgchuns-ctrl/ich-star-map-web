@@ -11,6 +11,7 @@ import InheritorSection from '@/sections/InheritorSection.vue'
 import ComparisonSection from '@/sections/ComparisonSection.vue'
 import SearchSection from '@/sections/SearchSection.vue'
 import DataSection from '@/sections/DataSection.vue'
+import NoticeSection from '@/sections/NoticeSection.vue'
 import { useAppStore } from '@/stores/appStore'
 
 const store = useAppStore()
@@ -38,6 +39,7 @@ onMounted(() => {
       <ComparisonSection id="comparison" />
       <SearchSection id="search" />
       <DataSection id="data" />
+      <NoticeSection id="notes" />
     </template>
   </main>
   <AppFooter />

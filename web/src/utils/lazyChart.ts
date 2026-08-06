@@ -28,7 +28,7 @@ export function useLazyChart(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) init()
       },
-      { rootMargin: '240px 0px' },
+      { rootMargin: '0px 0px -40px 0px' },
     )
     if (el.value) io.observe(el.value)
   })

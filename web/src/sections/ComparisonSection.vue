@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { EChartsOption } from 'echarts'
 import { computed, ref, watch } from 'vue'
-import DataDisclaimer from '@/components/DataDisclaimer.vue'
 import Reveal from '@/components/Reveal.vue'
 import { useAppStore } from '@/stores/appStore'
 import { CATEGORY_COLORS, CATEGORY_ORDER } from '@/types'
@@ -62,6 +61,9 @@ const radarChart = useLazyChart(radarEl, () => {
   const ta = total.get(provA.value) ?? 1
   const tb = total.get(provB.value) ?? 1
   const option: EChartsOption = {
+    animation: true,
+    animationDuration: 1000,
+    animationEasing: 'cubicOut',
     tooltip: {
       backgroundColor: 'rgba(16,24,38,0.92)',
       borderColor: 'rgba(217,184,119,0.4)',
@@ -107,6 +109,9 @@ const radarChart = useLazyChart(radarEl, () => {
 const batchChart = useLazyChart(batchEl, () => {
   const labels = store.dataset?.batches.map((b) => `第${b.batch_no}批`) ?? []
   const option: EChartsOption = {
+    animation: true,
+    animationDuration: 900,
+    animationEasing: 'cubicOut',
     tooltip: {
       trigger: 'axis',
       backgroundColor: 'rgba(16,24,38,0.92)',
@@ -225,8 +230,8 @@ const summary = computed(() => {
 
       <Reveal>
         <div class="compare-cards">
-          <div v-for="p in [rowOf(provA), rowOf(provB)]" :key="p?.province ?? ''" class="card compare-card hoverable">
-            <template v-if="p">
+          <Reveal :delay="0" v-for="(p, i) in [rowOf(provA), rowOf(provB)]" :key="p?.province ?? i">
+            <div v-if="p" class="card compare-card hoverable">
               <h3>{{ p.province }}</h3>
               <div class="compare-grid">
                 <div class="c-stat"><b>{{ p.subitem_count }}</b><span>地区子项</span></div>
@@ -239,23 +244,25 @@ const summary = computed(() => {
                   <span>覆盖率</span>
                 </div>
               </div>
-            </template>
-          </div>
+            </div>
+          </Reveal>
         </div>
       </Reveal>
 
-      <Reveal>
-        <div class="grid-2">
+      <div class="grid-2">
+        <Reveal direction="left">
           <div class="card chart-card hoverable">
             <h3>类别结构雷达（占比 %）</h3>
             <div ref="radarEl" class="chart chart-lg"></div>
           </div>
+        </Reveal>
+        <Reveal direction="right" :delay="140">
           <div class="card chart-card hoverable">
             <h3>批次子项对比</h3>
             <div ref="batchEl" class="chart chart-lg"></div>
           </div>
-        </div>
-      </Reveal>
+        </Reveal>
+      </div>
 
       <Reveal>
         <div class="card">
@@ -265,10 +272,6 @@ const summary = computed(() => {
           </ul>
         </div>
       </Reveal>
-
-      <div class="note-block">
-        <DataDisclaimer />
-      </div>
     </div>
   </section>
 </template>
@@ -353,8 +356,5 @@ const summary = computed(() => {
 }
 .summary-list li {
   margin-bottom: 8px;
-}
-.note-block {
-  margin-top: 18px;
 }
 </style>

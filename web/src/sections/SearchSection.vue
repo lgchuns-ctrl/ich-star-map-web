@@ -2,7 +2,6 @@
 import { computed, ref, watch } from 'vue'
 import FilterBar from '@/components/FilterBar.vue'
 import ProjectDetailDrawer from '@/components/ProjectDetailDrawer.vue'
-import DataDisclaimer from '@/components/DataDisclaimer.vue'
 import Reveal from '@/components/Reveal.vue'
 import { emptyFilter, filterSubitems } from '@/services/dataService'
 import { useAppStore } from '@/stores/appStore'
@@ -127,9 +126,6 @@ const provinces = computed<string[]>(() =>
         <div v-else class="empty-state">未找到符合条件的项目。可尝试清空筛选或更换关键词。</div>
       </Reveal>
 
-      <div class="note-block">
-        <DataDisclaimer />
-      </div>
     </div>
   </section>
 
@@ -195,8 +191,5 @@ const provinces = computed<string[]>(() =>
 .pagination .btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-}
-.note-block {
-  margin-top: 16px;
 }
 </style>

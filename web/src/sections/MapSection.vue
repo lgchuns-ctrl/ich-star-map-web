@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import ChinaMap from '@/charts/ChinaMap.vue'
 import FilterBar from '@/components/FilterBar.vue'
 import ProjectDetailDrawer from '@/components/ProjectDetailDrawer.vue'
-import DataDisclaimer from '@/components/DataDisclaimer.vue'
 import Reveal from '@/components/Reveal.vue'
 import { useAppStore } from '@/stores/appStore'
 import type { MapMetric, ProvinceRow, Subitem } from '@/types'
@@ -143,8 +142,8 @@ const activeFilterNote = computed(() => {
         />
       </Reveal>
 
-      <Reveal>
-        <div class="map-layout">
+      <div class="map-layout">
+        <Reveal direction="left">
           <div class="card map-card">
             <ChinaMap
               v-if="store.dataset"
@@ -159,7 +158,9 @@ const activeFilterNote = computed(() => {
             <div v-else-if="store.loading" class="loading-box">数据加载中…</div>
             <div v-else class="empty-state">数据未加载。</div>
           </div>
+        </Reveal>
 
+        <Reveal direction="right" :delay="140">
           <div class="card side-panel">
             <h3 class="panel-title">
               {{ store.filters.province ? store.filters.province : '省份列表' }}
@@ -234,11 +235,7 @@ const activeFilterNote = computed(() => {
             </div>
             <div v-if="provinceAgg.length === 0" class="empty-state">当前筛选条件下暂无数据。</div>
           </div>
-        </div>
-      </Reveal>
-
-      <div class="map-note">
-        <DataDisclaimer />
+        </Reveal>
       </div>
     </div>
   </section>
@@ -335,8 +332,5 @@ const activeFilterNote = computed(() => {
 }
 .item-meta {
   flex: none;
-}
-.map-note {
-  margin-top: 16px;
 }
 </style>
