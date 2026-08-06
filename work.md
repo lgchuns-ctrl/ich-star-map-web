@@ -165,3 +165,27 @@ chrome --headless=new --dump-dom ...          # 首页/地图/传承资源/搜�
 - 省份对比实验室（基于 province_comparison.json）；
 - 图表数据下载、分享/海报导出评估；
 - ECharts 按需引入，压缩构建体积。
+
+## 2026-08-06 视觉问题修复：首页指标卡中间的黄线
+
+### 问题
+
+用户反馈首页四个指标卡“中间有一条横穿的黄线”。
+
+### 原因（已通过截图像素分析与代码定位确认）
+
+- 首页 hero 区原本设置 `border-bottom: 1px solid var(--line)`（`--line` 为金色半透明 rgba(217,184,119,0.18)）；
+- `.metrics-section` 使用 `margin-top: -34px` 将指标卡上移压住 hero 底边，且卡片背景为半透明（rgba(255,255,255,0.035)），导致这条金色边框线从四个指标卡之间透出，看起来像一条横穿卡片的黄线。
+
+### 修复
+
+- `web/src/views/HomeView.vue` 移除 `.hero` 的 `border-bottom`；
+- 重新构建：`npm run build` 成功，dist CSS 中已无 hero 边框（剩余 border-bottom 均为页头与表格的正常分隔样式）；
+- 首页 headless 渲染正常（指标卡仍显示）。
+
+### 验证
+
+```text
+npm.cmd run build   # 通过
+chrome --headless=new --dump-dom http://localhost:4173/#/   # 首页渲染正常
+```

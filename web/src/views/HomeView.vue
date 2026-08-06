@@ -112,7 +112,6 @@ const questions = [
   min-height: 72vh;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--line);
   overflow: hidden;
   background: radial-gradient(1200px 600px at 70% 20%, rgba(217, 184, 119, 0.08), transparent 60%);
 }
