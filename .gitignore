@@ -25,3 +25,6 @@ data/raw/request_logs/response_cache/
 # 本地环境
 .env
 .env.*
+
+# 参考文件（仅本地阅读，不纳入版本库）
+黑话.pptx
