@@ -119,12 +119,44 @@ describe('loadDataset', () => {
   it('从本地 JSON 加载全部数据并解析', async () => {
     const mock = {
       './data/metadata.json': { data_version: 'v0.1.0-pilot', raw_record_count: 3 },
-      './data/provinces.json': [{ province: '贵州省', map_name: '贵州省', subitem_count: 2 }],
+      './data/provinces.json': [
+        {
+          province: '贵州省',
+          map_name: '贵州省',
+          subitem_count: 2,
+          project_count: 1,
+          categories_covered: 1,
+          new_count: 1,
+          extension_count: 1,
+          protection_unit_count: 1,
+          inheritor_count: 3,
+          matched_subitem_count: 2,
+          inheritor_coverage: 1,
+          inheritors_per_100_subitems: 150,
+        },
+      ],
       './data/categories.json': [{ category: '民间文学', subitem_count: 2 }],
       './data/batches.json': [{ batch_no: 1, publish_year: 2006, total: 1 }],
+      './data/inheritor_batches.json': [{ batch_no: 1, publish_year: 2007, inheritor_count: 3 }],
       './data/projects.json': [{ project_code: 'I-1', project_name: '苗族古歌' }],
       './data/subitems.json': items,
+      './data/inheritors.json': [
+        {
+          inheritor_id: 'inh-1',
+          name: '王安江',
+          gender: '男',
+          ethnicity: '苗族',
+          project_code: 'I-1',
+          project_name: '苗族古歌',
+          category: '民间文学',
+          province: '贵州省',
+          batch_no: 1,
+          publish_year: 2007,
+          match_status: 'matched',
+        },
+      ],
       './data/project_search_index.json': [],
+      './data/conclusions.json': [{ 结论: '测试结论', 对应指标: 'x', 使用字段: [], 筛选条件: '', 数据版本: 'v1', 生成日期: '2026-08-06' }],
       './data/methodology.json': { collection: 'test' },
       './data/geojson/china.json': { type: 'FeatureCollection', features: [] },
     } as Record<string, unknown>
@@ -139,6 +171,8 @@ describe('loadDataset', () => {
     const ds = await loadDataset()
     expect(ds.metadata.data_version).toBe('v0.1.0-pilot')
     expect(ds.subitems.length).toBe(3)
+    expect(ds.inheritors.length).toBe(1)
+    expect(ds.conclusions.length).toBe(1)
     expect(ds.geoJson.features).toEqual([])
   })
 

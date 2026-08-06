@@ -2,6 +2,7 @@
 const links = [
   { to: '/', label: '首页' },
   { to: '/map', label: '全国分布' },
+  { to: '/inheritors', label: '传承资源观察' },
   { to: '/search', label: '寻找一项非遗' },
   { to: '/data', label: '数据与方法' },
 ]

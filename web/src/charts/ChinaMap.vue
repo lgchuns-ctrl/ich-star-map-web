@@ -3,6 +3,8 @@ import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { ProvinceRow } from '@/types'
+import type { MapMetric } from '@/types'
+import { MAP_METRIC_LABELS } from '@/types'
 
 const props = defineProps<{
   geoJson: GeoJSON.FeatureCollection
@@ -10,6 +12,7 @@ const props = defineProps<{
   selected: string
   loading: boolean
   error: string
+  metric: MapMetric
 }>()
 
 const emit = defineEmits<{ (e: 'select', province: string): void }>()
@@ -24,7 +27,17 @@ const byName = new Map<string, ProvinceRow>()
 function buildOption(): EChartsOption {
   const data = props.provinceData
     .filter((p) => p.map_name)
-    .map((p) => ({ name: p.map_name, value: p.subitem_count }))
+    .map((p) => ({
+      name: p.map_name,
+      value:
+        props.metric === 'project'
+          ? p.project_count
+          : props.metric === 'inheritor'
+            ? p.inheritor_count
+            : props.metric === 'category'
+              ? p.categories_covered
+              : p.subitem_count,
+    }))
   const maxValue = Math.max(1, ...data.map((d) => d.value))
   return {
     tooltip: {
@@ -39,10 +52,9 @@ function buildOption(): EChartsOption {
         if (!row) return `${name}<br/>暂无试点数据`
         return [
           `<b>${row.province}</b>`,
-          `地区子项：${row.subitem_count}`,
-          `独立项目：${row.project_count}`,
-          `类别覆盖：${row.categories_covered}`,
-          `新增/扩展：${row.new_count} / ${row.extension_count}`,
+          `${MAP_METRIC_LABELS[props.metric]}：${p.value ?? 0}`,
+          `地区子项：${row.subitem_count} · 独立项目：${row.project_count}`,
+          `传承人：${row.inheritor_count} · 类别覆盖：${row.categories_covered}`,
         ].join('<br/>')
       },
     },
@@ -60,7 +72,7 @@ function buildOption(): EChartsOption {
     },
     series: [
       {
-        name: '地区子项数',
+        name: MAP_METRIC_LABELS[props.metric],
         type: 'map',
         map: 'china',
         roam: true,
@@ -133,6 +145,7 @@ onBeforeUnmount(() => {
 watch(() => props.provinceData, render, { deep: false })
 watch(() => props.selected, render)
 watch(() => props.geoJson, render)
+watch(() => props.metric, render)
 </script>
 
 <template>

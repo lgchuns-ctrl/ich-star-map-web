@@ -1,8 +1,11 @@
 import type {
   BatchRow,
   CategoryRow,
+  Conclusion,
   EntryType,
   FilterState,
+  Inheritor,
+  InheritorBatchRow,
   Metadata,
   Methodology,
   ProjectRow,
@@ -24,27 +27,39 @@ export interface Dataset {
   provinces: ProvinceRow[]
   categories: CategoryRow[]
   batches: BatchRow[]
+  inheritorBatches: InheritorBatchRow[]
   projects: ProjectRow[]
   subitems: Subitem[]
+  inheritors: Inheritor[]
   searchIndex: SearchIndexEntry[]
+  conclusions: Conclusion[]
   methodology: Methodology
   geoJson: GeoJSON.FeatureCollection
 }
 
 export async function loadDataset(): Promise<Dataset> {
-  const [metadata, provinces, categories, batches, projects, subitems, searchIndex, methodology, geoJson] =
+  const [
+    metadata, provinces, categories, batches, inheritorBatches, projects, subitems,
+    inheritors, searchIndex, conclusions, methodology, geoJson,
+  ] =
     await Promise.all([
       fetchJson<Metadata>('./data/metadata.json'),
       fetchJson<ProvinceRow[]>('./data/provinces.json'),
       fetchJson<CategoryRow[]>('./data/categories.json'),
       fetchJson<BatchRow[]>('./data/batches.json'),
+      fetchJson<InheritorBatchRow[]>('./data/inheritor_batches.json'),
       fetchJson<ProjectRow[]>('./data/projects.json'),
       fetchJson<Subitem[]>('./data/subitems.json'),
+      fetchJson<Inheritor[]>('./data/inheritors.json'),
       fetchJson<SearchIndexEntry[]>('./data/project_search_index.json'),
+      fetchJson<Conclusion[]>('./data/conclusions.json'),
       fetchJson<Methodology>('./data/methodology.json'),
       fetchJson<GeoJSON.FeatureCollection>('./data/geojson/china.json'),
     ])
-  return { metadata, provinces, categories, batches, projects, subitems, searchIndex, methodology, geoJson }
+  return {
+    metadata, provinces, categories, batches, inheritorBatches, projects, subitems,
+    inheritors, searchIndex, conclusions, methodology, geoJson,
+  }
 }
 
 export function filterSubitems(items: Subitem[], f: FilterState): Subitem[] {

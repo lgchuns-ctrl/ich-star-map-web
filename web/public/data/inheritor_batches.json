@@ -1,0 +1,32 @@
+[
+ {
+  "batch_no": 1,
+  "publish_year": 2007,
+  "inheritor_count": 226
+ },
+ {
+  "batch_no": 2,
+  "publish_year": 2008,
+  "inheritor_count": 550
+ },
+ {
+  "batch_no": 3,
+  "publish_year": 2009,
+  "inheritor_count": 705
+ },
+ {
+  "batch_no": 4,
+  "publish_year": 2012,
+  "inheritor_count": 495
+ },
+ {
+  "batch_no": 5,
+  "publish_year": 2018,
+  "inheritor_count": 1077
+ },
+ {
+  "batch_no": 6,
+  "publish_year": 2025,
+  "inheritor_count": 942
+ }
+]

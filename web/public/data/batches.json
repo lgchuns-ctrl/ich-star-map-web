@@ -2,41 +2,46 @@
  {
   "batch_no": 1,
   "publish_year": 2006,
-  "new_count": 53,
+  "new_count": 763,
   "extension_count": 0,
-  "total": 53,
-  "cumulative": 53
+  "total": 763,
+  "project_total": 518,
+  "cumulative": 763
  },
  {
   "batch_no": 2,
   "publish_year": 2008,
-  "new_count": 70,
-  "extension_count": 9,
-  "total": 79,
-  "cumulative": 132
+  "new_count": 925,
+  "extension_count": 427,
+  "total": 1352,
+  "project_total": 657,
+  "cumulative": 2115
  },
  {
   "batch_no": 3,
   "publish_year": 2011,
-  "new_count": 48,
-  "extension_count": 10,
-  "total": 58,
-  "cumulative": 190
+  "new_count": 228,
+  "extension_count": 339,
+  "total": 567,
+  "project_total": 355,
+  "cumulative": 2682
  },
  {
   "batch_no": 4,
   "publish_year": 2014,
-  "new_count": 33,
-  "extension_count": 7,
-  "total": 40,
-  "cumulative": 230
+  "new_count": 166,
+  "extension_count": 297,
+  "total": 463,
+  "project_total": 306,
+  "cumulative": 3145
  },
  {
   "batch_no": 5,
   "publish_year": 2021,
-  "new_count": 12,
-  "extension_count": 9,
-  "total": 21,
-  "cumulative": 251
+  "new_count": 196,
+  "extension_count": 269,
+  "total": 465,
+  "project_total": 325,
+  "cumulative": 3610
  }
 ]

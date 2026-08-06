@@ -5,10 +5,11 @@ import FilterBar from '@/components/FilterBar.vue'
 import ProjectDetailDrawer from '@/components/ProjectDetailDrawer.vue'
 import DataDisclaimer from '@/components/DataDisclaimer.vue'
 import { useAppStore } from '@/stores/appStore'
-import type { ProvinceRow, Subitem } from '@/types'
-import { BATCH_LABELS, ENTRY_TYPE_LABELS } from '@/types'
+import type { MapMetric, ProvinceRow, Subitem } from '@/types'
+import { BATCH_LABELS, ENTRY_TYPE_LABELS, MAP_METRIC_LABELS } from '@/types'
 
 const store = useAppStore()
+const metric = ref<MapMetric>('subitem')
 
 const mapNameOf = computed(
   () =>
@@ -28,6 +29,11 @@ const provinceAgg = computed<ProvinceRow[]>(() => {
         categories_covered: 0,
         new_count: 0,
         extension_count: 0,
+        protection_unit_count: 0,
+        inheritor_count: 0,
+        matched_subitem_count: 0,
+        inheritor_coverage: null,
+        inheritors_per_100_subitems: null,
       }
       map.set(it.province, row)
     }
@@ -39,9 +45,22 @@ const provinceAgg = computed<ProvinceRow[]>(() => {
     const items = store.filteredSubitems.filter((i) => i.province === row.province)
     row.project_count = new Set(items.map((i) => i.project_code)).size
     row.categories_covered = new Set(items.map((i) => i.category)).size
+    const full = store.dataset?.provinces.find((p) => p.province === row.province)
+    row.protection_unit_count = full?.protection_unit_count ?? 0
+    row.inheritor_count = full?.inheritor_count ?? 0
+    row.matched_subitem_count = full?.matched_subitem_count ?? 0
+    row.inheritor_coverage = full?.inheritor_coverage ?? null
+    row.inheritors_per_100_subitems = full?.inheritors_per_100_subitems ?? null
   }
   return [...map.values()].sort((a, b) => b.subitem_count - a.subitem_count)
 })
+
+const metrics: Array<{ key: MapMetric; label: string }> = [
+  { key: 'subitem', label: MAP_METRIC_LABELS.subitem },
+  { key: 'project', label: MAP_METRIC_LABELS.project },
+  { key: 'inheritor', label: MAP_METRIC_LABELS.inheritor },
+  { key: 'category', label: MAP_METRIC_LABELS.category },
+]
 
 const selectedItems = computed<Subitem[]>(() =>
   store.filters.province
@@ -86,8 +105,25 @@ const activeFilterNote = computed(() => {
   <div class="container">
     <h1 class="page-title">全国分布</h1>
     <p class="page-sub">
-      国家级非遗项目与地区子项的省级分布。悬浮查看数据，点击地图或右侧列表选择省份；支持类别、批次与新增/扩展筛选。
+      国家级非遗项目、地区子项与传承人的省级分布。悬浮查看数据，点击地图或右侧列表选择省份；支持类别、批次与新增/扩展筛选。
     </p>
+
+    <div class="metric-row chip-row">
+      <span class="small muted">地图指标：</span>
+      <button
+        v-for="m in metrics"
+        :key="m.key"
+        type="button"
+        class="chip"
+        :class="{ active: metric === m.key }"
+        @click="metric = m.key"
+      >
+        {{ m.label }}
+      </button>
+      <span v-if="metric === 'inheritor'" class="small muted">
+        （传承人数量为全量口径，不受当前筛选影响）
+      </span>
+    </div>
 
     <FilterBar
       :model-value="store.filters"
@@ -107,6 +143,7 @@ const activeFilterNote = computed(() => {
           :selected="store.filters.province"
           :loading="store.loading"
           :error="store.error"
+          :metric="metric"
           @select="onSelectProvince"
         />
         <div v-else-if="store.loading" class="loading-box">数据加载中…</div>
@@ -136,6 +173,14 @@ const activeFilterNote = computed(() => {
             <b>{{ selectedRow.new_count }}/{{ selectedRow.extension_count }}</b>
             <span>新增/扩展</span>
           </div>
+          <div class="stat">
+            <b>{{ selectedRow.inheritor_count }}</b>
+            <span>传承人</span>
+          </div>
+          <div class="stat">
+            <b>{{ selectedRow.inheritors_per_100_subitems ?? '—' }}</b>
+            <span>每百子项传承人</span>
+          </div>
         </div>
 
         <div v-if="selectedItems.length" class="item-list">
@@ -164,7 +209,17 @@ const activeFilterNote = computed(() => {
             @click="onSelectProvince(p.province)"
           >
             <span class="item-name">{{ p.province }}</span>
-            <span class="item-meta small">{{ p.subitem_count }} 子项 · {{ p.project_count }} 项目</span>
+            <span class="item-meta small">
+              {{ MAP_METRIC_LABELS[metric] }}：{{
+                metric === 'project'
+                  ? p.project_count
+                  : metric === 'inheritor'
+                    ? p.inheritor_count
+                    : metric === 'category'
+                      ? p.categories_covered
+                      : p.subitem_count
+              }}
+            </span>
           </button>
         </div>
         <div v-if="provinceAgg.length === 0" class="empty-state">当前筛选条件下暂无数据。</div>

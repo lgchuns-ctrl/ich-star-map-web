@@ -74,7 +74,7 @@ const provinces = computed<string[]>(() =>
     />
 
     <div class="result-summary muted small">
-      共 {{ results.length }} 条记录（当前试点数据集为「民间文学」门类 251 条地区子项）
+      共 {{ results.length }} 条记录（全量数据集：十大门类 {{ store.dataset?.metadata.cleaned_subitem_count }} 条地区子项）
     </div>
 
     <div v-if="paged.length" class="card table-card">

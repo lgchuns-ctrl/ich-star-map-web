@@ -14,7 +14,7 @@ const metrics = computed(() => {
     { label: '地区子项记录', value: d.metadata.cleaned_subitem_count, note: '按申报地区展开' },
     { label: '独立项目', value: d.metadata.distinct_project_count, note: '按项目编号去重' },
     { label: '覆盖省级地区', value: d.provinces.length, note: '含中直单位等' },
-    { label: '涉及门类', value: d.categories.length, note: '十大类别之一' },
+    { label: '传承人公开记录', value: d.metadata.inheritor_count, note: '含第六批(2025)' },
   ]
 })
 
