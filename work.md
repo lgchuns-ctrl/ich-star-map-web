@@ -411,3 +411,12 @@ git checkout main
 - 根因：绘制与命中检测的坐标计算漏加了画布中心偏移（W/2、H/2），星点被定位到左上角原点附近；
 - 修复：draw/toScreen/zoomTo 三处统一为 `W/2 + x*W*0.5`、`H/2 + y*H*0.5`；同时提升星点亮度和光晕、缩放倍数调为 2.2、点击放大后详情面板自动滚入视野；
 - 验证：CDP 采样确认 10 颗星全部在画布内且亮度正常；点击“传统技艺”放大并弹出面板；type-check/build 通过。
+
+## 2026-08-07 3D 粒子星系（Three.js + 手势 + 鼠标）
+
+- 新增 `web/src/components/CategoryGalaxy3D.vue`：Three.js 3D 粒子场（3610 子项=3610 粒子，按十类聚成 10 星团，粒子绕中心缓慢公转）；鼠标拖拽旋转、滚轮缩放；点击星团平滑飞入 + 详情面板；
+- **手势控制**（可选开启）：MediaPipe Hands（CDN 按需加载）——转手→相机旋转、握拳拉远→相机远离（先慢后快）、五指张开靠近→相机靠近（先快后慢），带最小距离限制；摄像头画面仅本地识别不上传；无网络/未授权自动提示并保持鼠标可用；
+- WebGL 不可用时自动回退到 2D 星图组件；prefers-reduced-motion 下粒子静止；
+- 依赖：three + @types/three；vite manualChunks 将 three 拆为独立 chunk；
+- 修复时序问题：数据加载完成前初始化场景导致粒子缺失 → 增加 dataset 就绪后重建场景；
+- 验证：CDP（SwiftShader WebGL）：webglOk=true、sceneChildren=31、粒子 3610、点击“传统技艺”选中并弹出面板；type-check/build 通过。
