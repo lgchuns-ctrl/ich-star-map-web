@@ -10,6 +10,7 @@ export const NAV_SECTIONS: NavSection[] = [
   { id: 'categories', label: '类别星系' },
   { id: 'inheritors', label: '传承资源' },
   { id: 'comparison', label: '省份对比' },
+  { id: 'custom', label: '自定义观察' },
   { id: 'search', label: '寻找非遗' },
   { id: 'data', label: '数据与方法' },
   { id: 'notes', label: '口径说明' },

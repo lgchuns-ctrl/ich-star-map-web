@@ -10,6 +10,7 @@ import TimelineSection from '@/sections/TimelineSection.vue'
 import CategorySection from '@/sections/CategorySection.vue'
 import InheritorSection from '@/sections/InheritorSection.vue'
 import ComparisonSection from '@/sections/ComparisonSection.vue'
+import CustomObservationSection from '@/sections/CustomObservationSection.vue'
 import SearchSection from '@/sections/SearchSection.vue'
 import DataSection from '@/sections/DataSection.vue'
 import NoticeSection from '@/sections/NoticeSection.vue'
@@ -39,6 +40,7 @@ onMounted(() => {
       <CategorySection id="categories" />
       <InheritorSection id="inheritors" />
       <ComparisonSection id="comparison" />
+      <CustomObservationSection id="custom" />
       <SearchSection id="search" />
       <DataSection id="data" />
       <NoticeSection id="notes" />

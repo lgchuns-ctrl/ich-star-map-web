@@ -357,3 +357,11 @@ git checkout main
 - 本地重新构建 → 更新 gh-pages 分支（31f7cc6）→ `git push origin gh-pages` 完成上线；同时推送 main（de66902）备份；
 - 线上验证：https://lgchuns-ctrl.github.io/ich-star-map-web/ HTTP 200，bundle 为 index-CWevQMEc.js（星空版），数据文件正常；
 - 从本次起，push 可在授权会话内由主代理直接完成，无需用户手动执行。
+
+## 2026-08-07 语音交互定制可视化 MVP
+
+- 新增「自定义观察」区块（锚点 custom）：文字/语音输入 → 本地规则意图解析 → 真实数据生成定制图表。
+- 实现：`web/src/services/intentParser.ts`（地区/类别/指标/模板识别 + 同义词表）、`web/src/sections/CustomObservationSection.vue`（输入、Web Speech API 语音、示例卡、结果面板、三模板图表）、导航与 App 挂载。
+- 首批模板：双省对比（类别柱状 + 指标卡）、类别分布（单省类别图/全国类别TOP）、地区排名（按指标 TOP10）。
+- 验证：type-check 0 错误；vitest 23/23（新增 8 项解析测试）；构建成功；CDP 端到端点击示例 → 三个模板均正确解析并绘制图表（绘制像素 9.9万/14.6万/11.6万）。
+- 语音识别用浏览器 Web Speech API（zh-CN），不支持/无权限时自动提示并降级文字输入，核心功能离线可用。
