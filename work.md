@@ -451,3 +451,9 @@ git checkout main
 - 保持：分层深空背景（装饰层）与数据层严格分离、固定随机种子、3610 数据粒子仅在星团内、无白色过热；
 - 验证：10 标签、星团位置围绕分布、scale 0.984–1.064、视差生效、97.8% 画布有内容、白色过热 0%、控制台 0 异常；type-check / 95 测试 / build 通过；
 - 待验收后继续 PHASE 2-5（Hover/Tooltip → 点击平滑放大 → 粒子交互接详情 → 返回动画）。
+
+## 2026-08-07 回退到原 3D 版
+
+- 用户评估 2D/2.5D 实验版本后决定回退到**原 3D 版**（两级宇宙探索版，c784a0d 实现）；
+- 从 Git 恢复 `CategoryGalaxy3D.vue` 与 `CategoryGalaxy.vue`（2D 回退），删除 `CategoryNebula.vue`，恢复 three.js 依赖与 chunk 配置；
+- 验证：type-check / 95 测试 / build 通过；CDP 实测：总览 10 星团、点击进入传统技艺（629 粒子/34 锚点/面板）、返回动画（level 0/详情销毁）全部正常。

@@ -3,7 +3,7 @@ import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
 import { computed, ref, watch } from 'vue'
 import Reveal from '@/components/Reveal.vue'
-import CategoryNebula from '@/components/CategoryNebula.vue'
+import CategoryGalaxy3D from '@/components/CategoryGalaxy3D.vue'
 import { useAppStore } from '@/stores/appStore'
 import { CATEGORY_COLORS, CATEGORY_ORDER } from '@/types'
 import { useLazyChart } from '@/utils/lazyChart'
@@ -139,7 +139,7 @@ watch(
       </Reveal>
 
       <Reveal>
-        <CategoryNebula />
+        <CategoryGalaxy3D />
       </Reveal>
 
       <Reveal>
