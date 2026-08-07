@@ -457,3 +457,8 @@ git checkout main
 - 用户评估 2D/2.5D 实验版本后决定回退到**原 3D 版**（两级宇宙探索版，c784a0d 实现）；
 - 从 Git 恢复 `CategoryGalaxy3D.vue` 与 `CategoryGalaxy.vue`（2D 回退），删除 `CategoryNebula.vue`，恢复 three.js 依赖与 chunk 配置；
 - 验证：type-check / 95 测试 / build 通过；CDP 实测：总览 10 星团、点击进入传统技艺（629 粒子/34 锚点/面板）、返回动画（level 0/详情销毁）全部正常。
+
+## 2026-08-07 删除手势控制
+
+- 从 3D 版中移除 MediaPipe 手势（按钮/加载/摄像头/视频/状态），保留鼠标拖拽/滚轮与全部数据交互；
+- 验证：type-check / 95 测试 / build 通过；grep 无残留；CDP 实测总览与进入详情正常。

@@ -11,13 +11,10 @@ const store = useAppStore()
 const mountRef = ref<HTMLDivElement | null>(null)
 const labelsRef = ref<HTMLDivElement | null>(null)
 const tooltipRef = ref<HTMLDivElement | null>(null)
-const videoRef = ref<HTMLVideoElement | null>(null)
 const webglOk = ref(true)
 const level = ref(0) // 0 = 总览, 1 = 类别内部
 const selectedCategory = ref<CategoryRow | null>(null)
 const colorMode = ref<'batch' | 'province'>('batch')
-const gestureState = ref<'idle' | 'loading' | 'on' | 'error'>('idle')
-const gestureMsg = ref('')
 const drawer = ref<{ visible: boolean; subitem: Subitem | null }>({ visible: false, subitem: null })
 
 // 本地专属低饱和宇宙色板（仅本组件使用）
@@ -772,100 +769,6 @@ function applyColorMode() {
   }
 }
 
-// ---------- 手势（复用原逻辑，适配限位相机） ----------
-function loadScript(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script')
-    s.src = src
-    s.onload = () => resolve()
-    s.onerror = () => reject(new Error('加载手势模型失败'))
-    document.head.appendChild(s)
-  })
-}
-
-let hands: {
-  setOptions: (o: Record<string, unknown>) => void
-  onResults: (cb: (r: unknown) => void) => void
-  send: (i: { image: unknown }) => Promise<void>
-  close: () => void
-} | null = null
-let camStream: { stop: () => void } | null = null
-let smoothedPalm = 0
-
-async function enableGestures() {
-  if (gestureState.value === 'on') {
-    camStream?.stop()
-    hands?.close()
-    gestureState.value = 'idle'
-    return
-  }
-  gestureState.value = 'loading'
-  gestureMsg.value = ''
-  try {
-    await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js')
-    await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js')
-    const W = window as unknown as {
-      Hands: new (cfg: { locateFile: (f: string) => string }) => {
-        setOptions: (o: Record<string, unknown>) => void
-        onResults: (cb: (r: unknown) => void) => void
-        send: (i: { image: unknown }) => Promise<void>
-        close: () => void
-      }
-      Camera: new (
-        video: HTMLVideoElement,
-        cfg: { onFrame: () => Promise<void>; width: number; height: number },
-      ) => { start: () => Promise<void>; stop: () => void }
-    }
-    const video = videoRef.value
-    if (!video) throw new Error('缺少视频元素')
-    const Hands = new W.Hands({
-      locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`,
-    })
-    Hands.setOptions({
-      maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.6,
-      minTrackingConfidence: 0.5,
-    })
-    Hands.onResults((res: unknown) => {
-      const r = res as { multiHandLandmarks?: Array<Array<{ x: number; y: number }>> }
-      const lm = r.multiHandLandmarks?.[0]
-      if (!lm) return
-      const wrist = lm[0]
-      const midMcp = lm[9]
-      const palm = Math.hypot(midMcp.x - wrist.x, midMcp.y - wrist.y)
-      const curled = [8, 12, 16, 20].filter((tip, i) => lm[tip].y > lm[5 + i * 4].y).length
-      const ang = Math.atan2(midMcp.y - wrist.y, midMcp.x - wrist.x)
-      if (smoothedPalm > 0) {
-        const delta = palm - smoothedPalm
-        if (curled >= 3) {
-          CAM_TARGET.radius += Math.sign(-delta) * Math.pow(Math.abs(delta), 1.5) * 2600
-        } else if (curled <= 1) {
-          CAM_TARGET.radius -= Math.sign(delta) * Math.pow(Math.abs(delta), 1.2) * 2600
-        }
-        clampCam()
-        CAM_TARGET.theta += ang * 2.2
-        clampCam()
-      }
-      smoothedPalm = palm
-    })
-    hands = Hands
-    const Camera = new W.Camera(video, {
-      onFrame: async () => {
-        await Hands.send({ image: video })
-      },
-      width: 320,
-      height: 240,
-    })
-    await Camera.start()
-    camStream = Camera
-    gestureState.value = 'on'
-  } catch (e) {
-    gestureState.value = 'error'
-    gestureMsg.value = e instanceof Error ? e.message : '手势控制启动失败，可继续使用鼠标。'
-  }
-}
-
 // ---------- 详情信息 ----------
 const detailInfo = computed(() => {
   const cat = selectedCategory.value
@@ -925,8 +828,6 @@ function rebuildAll() {
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf)
   window.removeEventListener('resize', onResize)
-  camStream?.stop()
-  hands?.close()
   clearScene()
   renderer?.dispose()
   renderer?.domElement.remove()
@@ -943,14 +844,6 @@ onBeforeUnmount(() => {
       <p class="small muted">
         总览十大非遗天体 · 点击进入类别，探索由真实地区子项组成的内部星系。
       </p>
-      <div class="gesture-row">
-        <button type="button" class="btn btn-sm" @click="enableGestures">
-          {{ gestureState === 'on' ? '关闭手势' : '开启手势控制' }}
-        </button>
-        <span v-if="gestureState === 'loading'" class="small muted">正在加载手势模型…</span>
-        <span v-else-if="gestureState === 'on'" class="small gesture-on">手势已开启：转手旋转 · 握拳拉远 · 五指张开靠近</span>
-        <span v-else-if="gestureState === 'error'" class="small gesture-err">{{ gestureMsg }}</span>
-      </div>
     </div>
 
     <div ref="mountRef" class="galaxy3d-canvas card">
@@ -987,12 +880,6 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <video
-        v-show="gestureState === 'on'"
-        ref="videoRef"
-        class="gesture-video"
-        playsinline
-      ></video>
     </div>
   </div>
 
@@ -1017,18 +904,6 @@ onBeforeUnmount(() => {
 .galaxy3d-head h3 {
   margin: 0;
   font-size: 16px;
-}
-.gesture-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.gesture-on {
-  color: var(--jade);
-}
-.gesture-err {
-  color: #f0a090;
 }
 .galaxy3d-canvas {
   position: relative;
@@ -1117,17 +992,6 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 8px;
   margin-top: 8px;
-}
-.gesture-video {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  width: 150px;
-  height: 112px;
-  border-radius: 8px;
-  border: 1px solid var(--gold-dim);
-  opacity: 0.8;
-  object-fit: cover;
 }
 @media (max-width: 860px) {
   .galaxy3d-canvas {
