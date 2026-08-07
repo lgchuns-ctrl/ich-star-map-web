@@ -420,3 +420,15 @@ git checkout main
 - 依赖：three + @types/three；vite manualChunks 将 three 拆为独立 chunk；
 - 修复时序问题：数据加载完成前初始化场景导致粒子缺失 → 增加 dataset 就绪后重建场景；
 - 验证：CDP（SwiftShader WebGL）：webglOk=true、sceneChildren=31、粒子 3610、点击“传统技艺”选中并弹出面板；type-check/build 通过。
+
+## 2026-08-07 类别星系两级宇宙探索系统改造
+
+- 依据 `docs/类别星系改造说明.md` 重写 `CategoryGalaxy3D.vue`：
+  - LEVEL 1：深空背景（远景恒星/中景星尘/星云 Sprite），10 个类别天体按深度构图，大小按子项数 sqrt 压缩，HTML 标签按距离/悬浮调透明度，鼠标视差 + 相机限位；
+  - 过曝修复：ACESFilmicToneMapping + exposure 1.0，常规粒子 NormalBlending 低 Opacity，核心渐变 Sprite，移除大面积 Additive 叠加；
+  - 飞入动画：点击天体 → 1.8s easeInOutCubic 相机飞入（位置/目标/FOV），其他天体淡出；
+  - LEVEL 2：仅加载当前类别真实子项（如传统技艺 629 颗），按省份锚点成局部星群，粒子按批次同色系渐变着色（可切换按省份），Hover Tooltip，点击复用 ProjectDetailDrawer；
+  - 返回：1.6s 反向动画，销毁详情粒子，恢复总览；
+  - LOD：总览不创建数据粒子；详情只建当前类别粒子（单 Points）；拾取 Raycaster；
+  - 保留 MediaPipe 手势（适配限位相机）；WebGL 不可用回退 2D；
+- 验证：CDP 实测 LEVEL1（10 天体/无数据粒子）、Hover Tooltip、飞入 LEVEL2（629 粒子/34 省份锚点/面板/其他天体淡出）、粒子点击开抽屉（仿膳(清廷御膳)制作技艺）、返回动画、颜色切换；10 个区块回归正常；控制台 0 异常；type-check/95 测试/build 通过。
