@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import Starfield from '@/components/Starfield.vue'
 import MetricCard from '@/components/MetricCard.vue'
 import AnimatedNumber from '@/components/AnimatedNumber.vue'
 import Reveal from '@/components/Reveal.vue'
@@ -45,7 +44,6 @@ const questions = [
 
 <template>
   <section :id="id" class="hero">
-    <Starfield />
     <div class="container hero-inner">
       <p class="hero-kicker rise-1">数字人文 · 数据可视化 · 文化传承观察</p>
       <h1 class="hero-title rise-2">非遗星图</h1>

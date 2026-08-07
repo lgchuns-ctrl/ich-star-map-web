@@ -55,6 +55,12 @@ html {
   flex-direction: column;
 }
 
+main,
+.site-footer {
+  position: relative;
+  z-index: 1;
+}
+
 a {
   color: var(--gold);
   text-decoration: none;

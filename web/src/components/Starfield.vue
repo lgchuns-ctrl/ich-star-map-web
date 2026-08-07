@@ -23,13 +23,12 @@ onMounted(() => {
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   const stars: Star[] = []
-  let width = 0
-  let height = 0
+  let width = window.innerWidth
+  let height = window.innerHeight
 
   function resize() {
-    const rect = canvas.parentElement?.getBoundingClientRect()
-    width = rect?.width ?? canvas.clientWidth
-    height = rect?.height ?? canvas.clientHeight
+    width = window.innerWidth
+    height = window.innerHeight
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     canvas.width = width * dpr
     canvas.height = height * dpr
@@ -87,7 +86,7 @@ onMounted(() => {
 
 <style scoped>
 .starfield {
-  position: absolute;
+  position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 0;

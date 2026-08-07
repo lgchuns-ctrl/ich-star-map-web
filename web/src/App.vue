@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import AppHeader from '@/components/AppHeader.vue'
 import AppFooter from '@/components/AppFooter.vue'
 import MouseGlow from '@/components/MouseGlow.vue'
+import Starfield from '@/components/Starfield.vue'
 import HomeHero from '@/sections/HomeHero.vue'
 import MapSection from '@/sections/MapSection.vue'
 import TimelineSection from '@/sections/TimelineSection.vue'
@@ -24,6 +25,7 @@ onMounted(() => {
 <template>
   <AppHeader />
   <MouseGlow />
+  <Starfield />
   <main>
     <div v-if="store.error" class="container">
       <div class="error-box">

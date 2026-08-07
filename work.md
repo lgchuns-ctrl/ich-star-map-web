@@ -345,3 +345,9 @@ git checkout main
 ## 2026-08-07 流程复盘与复用手册
 
 - 新增 `docs/开发流程复用手册.md`：从调研立项→数据管道→前端→测试构建→部署上线的完整流程 + 常见问题速查表 + 上线验收清单，供后续项目复用。
+
+## 2026-08-07 全屏星空背景
+
+- 星空层从首页 hero 提升为全局固定背景（`Starfield.vue` 改为 `position: fixed; inset: 0`，按 window 尺寸绘制），滚动到任何位置都持续显示；
+- 内容层（main/页脚）置为 `position: relative; z-index: 1` 保证可读性；触屏设备与 prefers-reduced-motion 行为不变；
+- 验证：type-check/build 通过；CDP 实测滚动前与滚动到页面底部，星空画布始终固定铺满视口（1262x748）。
