@@ -365,3 +365,9 @@ git checkout main
 - 首批模板：双省对比（类别柱状 + 指标卡）、类别分布（单省类别图/全国类别TOP）、地区排名（按指标 TOP10）。
 - 验证：type-check 0 错误；vitest 23/23（新增 8 项解析测试）；构建成功；CDP 端到端点击示例 → 三个模板均正确解析并绘制图表（绘制像素 9.9万/14.6万/11.6万）。
 - 语音识别用浏览器 Web Speech API（zh-CN），不支持/无权限时自动提示并降级文字输入，核心功能离线可用。
+
+## 2026-08-07 语音定制可视化版本上线
+
+- 重新构建 → 更新 gh-pages 分支（7f3168b）→ 推送 gh-pages 上线 + 推送 main（32dad6b）备份；
+- 线上验证：https://lgchuns-ctrl.github.io/ich-star-map-web/ HTTP 200，bundle 为 index-D1UZAm4j.js，部署 JS 含「自定义观察」导航项；
+- 用户确认后由主代理独立完成构建→上线→验证闭环。
