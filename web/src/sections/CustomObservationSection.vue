@@ -44,6 +44,9 @@ const examples = [
   '浙江省都有哪些类别的非遗',
   '传承人最多的省份',
   '传统技艺的分布',
+  '传统戏剧五批的变化',
+  '民间文学在全国的分布地图',
+  '对比浙江和山东的传承人',
 ]
 
 const metricLabel: Record<QueryMetric, string> = {
@@ -57,6 +60,8 @@ const provRows = computed(() => {
   const d = store.dataset
   return (name: string) => d?.provinces.find((p) => p.province === name)
 })
+
+let mapRegistered = false
 
 function countSubitems(region: string | null, category: string | null): number {
   const items = store.dataset?.subitems ?? []
@@ -109,6 +114,30 @@ function categoryShare(region: string): Array<{ category: string; count: number 
   }))
 }
 
+function batchTrendCounts(category: string | null, region: string | null): number[] {
+  const counts = [0, 0, 0, 0, 0]
+  for (const s of store.dataset?.subitems ?? []) {
+    if (category && s.category !== category) continue
+    if (region && s.province !== region) continue
+    counts[s.batch_no - 1] += 1
+  }
+  return counts
+}
+
+function inheritorRowsFor(regions: string[]) {
+  const d = store.dataset
+  if (!d) return []
+  return regions.map((r) => {
+    const row = d.provinces.find((p) => p.province === r)
+    return {
+      province: r,
+      inheritor: row?.inheritor_count ?? 0,
+      coverage: row ? (row.inheritor_coverage ?? 0) * 100 : 0,
+      per100: row?.inheritors_per_100_subitems ?? 0,
+    }
+  })
+}
+
 function buildOption(q: IntentQuery): EChartsOption {
   const d = store.dataset
   const baseTooltip = {
@@ -147,6 +176,121 @@ function buildOption(q: IntentQuery): EChartsOption {
           type: 'bar',
           data: cats.map((c) => countSubitems(b, c)),
           itemStyle: { color: '#5a9e8b', borderRadius: [4, 4, 0, 0] },
+        },
+      ],
+    }
+  }
+  if (q.template === 'inheritor-compare') {
+    const rows = inheritorRowsFor(q.regions)
+    const cats = rows.map((r) => r.province)
+    if (q.regions.length === 1) cats.push('全国')
+    const values = rows.map((r) => r.inheritor)
+    if (q.regions.length === 1) values.push(d?.metadata.inheritor_count ?? 0)
+    return {
+      animation: true,
+      animationDuration: 900,
+      tooltip: { ...baseTooltip, trigger: 'axis', axisPointer: { type: 'shadow' } },
+      grid: { left: 90, right: 50, top: 20, bottom: 30 },
+      xAxis: {
+        type: 'value',
+        axisLabel: { color: '#8a7f6a' },
+        splitLine: { lineStyle: { color: 'rgba(217,184,119,0.1)' } },
+      },
+      yAxis: {
+        type: 'category',
+        data: cats,
+        axisLabel: { color: '#b9ad96', fontSize: 12 },
+      },
+      series: [
+        {
+          name: '代表性传承人（公开）',
+          type: 'bar',
+          data: values.map((v) => ({
+            value: v,
+            itemStyle: { color: '#d9b877', borderRadius: [0, 4, 4, 0] },
+          })),
+          label: { show: true, position: 'right', color: '#b9ad96', fontSize: 11 },
+        },
+      ],
+    }
+  }
+  if (q.template === 'batch-trend') {
+    const labels = d?.batches.map((b) => `第${b.batch_no}批\n${b.publish_year}`) ?? []
+    const values = batchTrendCounts(q.category, q.regions[0] ?? null)
+    return {
+      animation: true,
+      animationDuration: 900,
+      tooltip: { ...baseTooltip, trigger: 'axis' },
+      grid: { left: 46, right: 30, top: 30, bottom: 30 },
+      xAxis: {
+        type: 'category',
+        data: labels,
+        axisLabel: { color: '#8a7f6a' },
+      },
+      yAxis: {
+        type: 'value',
+        name: '地区子项',
+        nameTextStyle: { color: '#8a7f6a' },
+        axisLabel: { color: '#8a7f6a' },
+        splitLine: { lineStyle: { color: 'rgba(217,184,119,0.1)' } },
+      },
+      series: [
+        {
+          name: q.category ?? q.regions[0] ?? '全部',
+          type: 'line',
+          data: values,
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 8,
+          lineStyle: { color: '#d9b877', width: 2 },
+          itemStyle: { color: '#d9b877' },
+          areaStyle: { color: 'rgba(217,184,119,0.12)' },
+          label: { show: true, color: '#b9ad96', fontSize: 11 },
+        },
+      ],
+    }
+  }
+  if (q.template === 'map') {
+    if (!mapRegistered && d) {
+      echarts.registerMap('china', d.geoJson as Parameters<typeof echarts.registerMap>[1])
+      mapRegistered = true
+    }
+    const rows = topProvinces(q.metric, q.category, 34)
+    const data = rows
+      .filter((r) => d?.provinces.find((p) => p.province === r.province)?.map_name)
+      .map((r) => ({
+        name: d!.provinces.find((p) => p.province === r.province)!.map_name,
+        value: q.metric === 'coverage' ? r.value / 10 : r.value,
+      }))
+    return {
+      animation: true,
+      animationDuration: 900,
+      tooltip: {
+        ...baseTooltip,
+        formatter: (p: unknown) => {
+          const v = (p as { name?: string; value?: number }).value ?? 0
+          return `${(p as { name?: string }).name ?? ''}<br/>${metricLabel[q.metric]}：${v}`
+        },
+      },
+      visualMap: {
+        min: 0,
+        max: Math.max(1, ...data.map((x) => x.value)),
+        calculable: true,
+        left: 12,
+        bottom: 12,
+        textStyle: { color: '#b9ad96' },
+        inRange: { color: ['#131c2b', '#3a2f1e', '#8a6a35', '#d9b877'] },
+      },
+      series: [
+        {
+          name: metricLabel[q.metric],
+          type: 'map',
+          map: 'china',
+          roam: true,
+          label: { show: false, color: '#b9ad96' },
+          emphasis: { label: { show: true, color: '#0b101a' } },
+          itemStyle: { borderColor: 'rgba(217,184,119,0.55)', borderWidth: 0.6 },
+          data,
         },
       ],
     }
@@ -299,6 +443,75 @@ function generate() {
   stage.value = 'done'
 }
 
+const exportRows = computed(() => {
+  const q = query.value
+  const d = store.dataset
+  if (!q || !d) return []
+  if (q.template === 'compare') {
+    return q.regions.map((r) => ({
+      地区: r,
+      类别: q.category ?? '全部',
+      子项: countSubitems(r, q.category),
+      项目: projectCount(r, q.category),
+      传承人: provRows.value(r)?.inheritor_count ?? 0,
+      覆盖率: provRows.value(r) ? Math.round(((provRows.value(r)?.inheritor_coverage ?? 0) * 100) * 10) / 10 : 0,
+    }))
+  }
+  if (q.template === 'inheritor-compare') {
+    return inheritorRowsFor(q.regions).map((r) => ({
+      地区: r.province,
+      传承人: r.inheritor,
+      覆盖率: Math.round(r.coverage * 10) / 10,
+      每百子项传承人: Math.round(r.per100 * 10) / 10,
+    }))
+  }
+  if (q.template === 'batch-trend') {
+    const counts = batchTrendCounts(q.category, q.regions[0] ?? null)
+    return d.batches.map((b, i) => ({
+      批次: `第${b.batch_no}批(${b.publish_year})`,
+      子项: counts[i],
+    }))
+  }
+  if (q.template === 'map') {
+    return topProvinces(q.metric, q.category, 34).map((r) => ({
+      地区: r.province,
+      指标: metricLabel[q.metric],
+      值: q.metric === 'coverage' ? Math.round((r.value / 10) * 10) / 10 : r.value,
+    }))
+  }
+  return topProvinces(q.metric, q.category).map((r) => ({
+    地区: r.province,
+    指标: metricLabel[q.metric],
+    值: q.metric === 'coverage' ? Math.round((r.value / 10) * 10) / 10 : r.value,
+  }))
+})
+
+function exportImage() {
+  if (!chart) return
+  const url = chart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#0b101a' })
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `非遗星图-${query.value?.note ?? '自定义观察'}.png`
+  a.click()
+}
+
+function exportData() {
+  if (!query.value) return
+  const payload = {
+    query: query.value.note,
+    updated_at: store.dataset?.metadata.updated_at ?? '',
+    disclaimer: '相关指标基于公开国家级名录及国家级代表性传承人数据构建，仅反映公开数据中的资源配置与覆盖情况，不代表官方濒危等级或保护成效评价。',
+    rows: exportRows.value,
+  }
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `非遗星图-${query.value.note.replace(/[·：]/g, '-')}.json`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 function useExample(text: string) {
   input.value = text
   generate()
@@ -364,6 +577,11 @@ const compareRows = computed(() => {
       coverage: row ? (row.inheritor_coverage ?? 0) * 100 : 0,
     }
   })
+})
+
+const inheritorRows = computed(() => {
+  if (!query.value || query.value.template !== 'inheritor-compare') return []
+  return inheritorRowsFor(query.value.regions)
 })
 
 onBeforeUnmount(() => {
@@ -452,7 +670,11 @@ watch(
               <h3>{{ input }}</h3>
               <p class="small muted">解析结果：{{ query.note }}</p>
             </div>
-            <button type="button" class="btn btn-sm" @click="clearResult">清除</button>
+            <div class="result-actions">
+              <button type="button" class="btn btn-sm" @click="exportImage">导出图片</button>
+              <button type="button" class="btn btn-sm" @click="exportData">导出数据</button>
+              <button type="button" class="btn btn-sm" @click="clearResult">清除</button>
+            </div>
           </div>
 
           <div v-if="query.template === 'compare' && compareRows.length" class="compare-cards">
@@ -463,6 +685,17 @@ watch(
                 <div class="c-stat"><b>{{ row.project }}</b><span>项目</span></div>
                 <div class="c-stat"><b>{{ row.inheritor }}</b><span>传承人</span></div>
                 <div class="c-stat"><b>{{ row.coverage.toFixed(1) }}%</b><span>覆盖率</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="query.template === 'inheritor-compare' && inheritorRows.length" class="compare-cards">
+            <div v-for="row in inheritorRows" :key="row.province" class="compare-card">
+              <h4>{{ row.province }}</h4>
+              <div class="c-grid">
+                <div class="c-stat"><b>{{ row.inheritor }}</b><span>传承人</span></div>
+                <div class="c-stat"><b>{{ row.coverage.toFixed(1) }}%</b><span>覆盖率</span></div>
+                <div class="c-stat"><b>{{ row.per100.toFixed(1) }}</b><span>每百子项</span></div>
               </div>
             </div>
           </div>
@@ -540,6 +773,16 @@ watch(
 .result-head h3 {
   margin: 0 0 4px;
   font-size: 17px;
+}
+.result-actions {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+@media (max-width: 640px) {
+  .result-actions {
+    flex-direction: column;
+  }
 }
 .compare-cards {
   display: grid;

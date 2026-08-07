@@ -1,6 +1,12 @@
 import { CATEGORY_ORDER } from '@/types'
 
-export type QueryTemplate = 'compare' | 'category-dist' | 'top'
+export type QueryTemplate =
+  | 'compare'
+  | 'category-dist'
+  | 'top'
+  | 'batch-trend'
+  | 'map'
+  | 'inheritor-compare'
 export type QueryMetric = 'subitem' | 'project' | 'inheritor' | 'coverage'
 
 export interface IntentQuery {
@@ -109,6 +115,9 @@ const TEMPLATE_LABEL: Record<QueryTemplate, string> = {
   compare: '双省对比',
   'category-dist': '类别分布',
   top: '地区排名',
+  'batch-trend': '批次趋势',
+  map: '地图分布',
+  'inheritor-compare': '传承资源对比',
 }
 
 export function parseIntent(raw: string, provinces: string[]): IntentQuery {
@@ -129,12 +138,14 @@ export function parseIntent(raw: string, provinces: string[]): IntentQuery {
   for (const [alias, name] of Object.entries(REGION_ALIASES)) entries.push({ alias, name })
   entries.sort((a, b) => b.alias.length - a.alias.length)
 
-  const regions: string[] = []
+  const found: Array<{ name: string; index: number }> = []
   for (const { alias, name } of entries) {
-    if (text.includes(alias) && canonical.has(name) && !regions.includes(name)) {
-      regions.push(name)
+    const idx = text.indexOf(alias)
+    if (idx >= 0 && canonical.has(name) && !found.some((f) => f.name === name)) {
+      found.push({ name, index: idx })
     }
   }
+  const regions = found.sort((a, b) => a.index - b.index).map((f) => f.name)
 
   let category: string | null = null
   const catEntries = Object.entries(CATEGORY_ALIASES).sort((a, b) => b[0].length - a[0].length)
@@ -151,15 +162,37 @@ export function parseIntent(raw: string, provinces: string[]): IntentQuery {
   else if (/独立项目|项目数|项目/.test(text)) metric = 'project'
   else if (/子项/.test(text)) metric = 'subitem'
 
-  const hasTop = /最多|最少|排名|排行|前\s*\d+|top|榜首|第一/.test(text)
+  const inheritorIntent = /传承人|传承资源|覆盖率/.test(text)
+  const hasTop =
+    /最多|最少|排名|排行|前\s*\d+|前[一二三四五六七八九十]+\s*名|top|榜首|第一|前几/.test(text)
+  const hasTrend = /趋势|变化|演化|发展|逐年|历年|批次|历史|演进/.test(text)
+  const hasMap = /地图|全国分布|分布在全国|看下全国|看看全国/.test(text)
   const hasCompare =
     regions.length >= 2 || /对比|比较|vs|和\s*.{0,8}比|与\s*.{0,8}相比|比一比/.test(text)
+  const hasDist = /分布|构成|占比|有哪些|哪些|都是|有多少|几个/.test(text)
 
   let template: QueryTemplate
-  if (regions.length >= 2 || hasCompare) template = 'compare'
+  if (regions.length >= 2 && inheritorIntent) template = 'inheritor-compare'
+  else if (regions.length === 1 && inheritorIntent) template = 'inheritor-compare'
+  else if (hasMap) template = 'map'
+  else if (hasTrend) template = 'batch-trend'
+  else if (regions.length >= 2 || hasCompare) template = 'compare'
   else if (hasTop) template = 'top'
-  else if (category || regions.length === 1) template = 'category-dist'
+  else if (category || regions.length === 1 || hasDist) template = 'category-dist'
   else template = 'top'
+
+  const recognized =
+    regions.length > 0 ||
+    Boolean(category) ||
+    hasTop ||
+    hasTrend ||
+    hasMap ||
+    hasCompare ||
+    hasDist ||
+    inheritorIntent
+  if (!recognized) {
+    return errorQuery('没太听懂，试着用“对比 / 排名 / 分布 / 趋势 / 地图 / 传承人”来描述你想看的。', suggestions)
+  }
 
   const parts: string[] = [TEMPLATE_LABEL[template]]
   if (regions.length) parts.push(`地区：${regions.join('、')}`)
