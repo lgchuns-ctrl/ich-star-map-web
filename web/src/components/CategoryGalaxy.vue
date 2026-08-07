@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useAppStore } from '@/stores/appStore'
 import type { CategoryRow } from '@/types'
 import { CATEGORY_COLORS } from '@/types'
@@ -7,6 +7,7 @@ import { CATEGORY_COLORS } from '@/types'
 const store = useAppStore()
 
 const canvasRef = ref<HTMLCanvasElement | null>(null)
+const panelRef = ref<HTMLDivElement | null>(null)
 const selected = ref<CategoryRow | null>(null)
 
 interface GalaxyStar {
@@ -55,8 +56,8 @@ const localStars: Array<{ x: number; y: number; r: number; p: number }> = []
 
 function toScreen(star: GalaxyStar, v: View) {
   return {
-    x: star.x * W * 0.5 * v.scale + v.tx,
-    y: star.y * H * 0.5 * v.scale + v.ty,
+    x: (W / 2 + star.x * W * 0.5) * v.scale + v.tx,
+    y: (H / 2 + star.y * H * 0.5) * v.scale + v.ty,
     r: star.r * (0.7 + 0.6 * star.z) * v.scale,
   }
 }
@@ -91,24 +92,25 @@ function draw() {
     const b = stars.value[(i + 1) % n]
     ctx.strokeStyle = `rgba(217,184,119,${0.14 * a.z * b.z})`
     ctx.beginPath()
-    ctx.moveTo(a.x * W * 0.5, a.y * H * 0.5)
-    ctx.lineTo(b.x * W * 0.5, b.y * H * 0.5)
+    ctx.moveTo(W / 2 + a.x * W * 0.5, H / 2 + a.y * H * 0.5)
+    ctx.lineTo(W / 2 + b.x * W * 0.5, H / 2 + b.y * H * 0.5)
     ctx.stroke()
   }
 
   // 星点
   stars.value.forEach((s, i) => {
-    const sx = s.x * W * 0.5
-    const sy = s.y * H * 0.5
-    const r = s.r * (0.7 + 0.6 * s.z)
+    const sx = W / 2 + s.x * W * 0.5
+    const sy = H / 2 + s.y * H * 0.5
+    const r = s.r * (0.75 + 0.35 * s.z)
     const hot = i === hoverIndex || selected.value?.category === s.row.category
-    const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 3)
+    const glowR = r * (hot ? 3.4 : 3)
+    const glow = ctx.createRadialGradient(sx, sy, 0, sx, sy, glowR)
     glow.addColorStop(0, s.color)
-    glow.addColorStop(0.35, `${s.color}55`)
+    glow.addColorStop(0.3, `${s.color}88`)
     glow.addColorStop(1, `${s.color}00`)
     ctx.fillStyle = glow
     ctx.beginPath()
-    ctx.arc(sx, sy, r * (hot ? 3.2 : 2.6), 0, Math.PI * 2)
+    ctx.arc(sx, sy, glowR, 0, Math.PI * 2)
     ctx.fill()
     ctx.fillStyle = s.color
     ctx.beginPath()
@@ -124,8 +126,13 @@ function draw() {
     const labelSize = Math.max(10, 13 * view.scale) / view.scale
     ctx.font = `${labelSize}px "PingFang SC","Microsoft YaHei",sans-serif`
     ctx.textAlign = 'center'
-    ctx.fillStyle = hot ? '#f2e8d5' : 'rgba(185,173,150,0.85)'
+    ctx.fillStyle = hot ? '#f2e8d5' : 'rgba(200,190,172,0.95)'
     ctx.fillText(s.row.category, sx, sy + r + 18 / view.scale)
+    if (hot && view.scale > 1.4) {
+      ctx.font = `bold ${(15 * view.scale) / view.scale}px "PingFang SC","Microsoft YaHei",sans-serif`
+      ctx.fillStyle = '#f2e8d5'
+      ctx.fillText(s.row.category, sx, sy - r - 12 / view.scale)
+    }
   })
   ctx.restore()
 }
@@ -146,11 +153,14 @@ function step() {
 function zoomTo(star: GalaxyStar, row: CategoryRow) {
   selected.value = row
   targetView = {
-    scale: 2.8,
-    tx: W / 2 - star.x * W * 0.5 * 2.8,
-    ty: H / 2 - star.y * H * 0.5 * 2.8,
+    scale: 2.2,
+    tx: W / 2 - (W / 2 + star.x * W * 0.5) * 2.2,
+    ty: H / 2 - (H / 2 + star.y * H * 0.5) * 2.2,
   }
   zooming = true
+  void nextTick(() => {
+    panelRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  })
 }
 
 function zoomOut() {
@@ -244,7 +254,7 @@ onBeforeUnmount(() => {
       ></canvas>
     </div>
 
-    <div v-if="selected" class="galaxy-panel card">
+    <div v-if="selected" ref="panelRef" class="galaxy-panel card">
       <div class="panel-top">
         <h4 :style="{ color: CATEGORY_COLORS[selected.category] }">{{ selected.category }}</h4>
         <button type="button" class="btn btn-sm" @click="zoomOut">返回星图</button>
