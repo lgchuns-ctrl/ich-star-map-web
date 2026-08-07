@@ -398,3 +398,9 @@ git checkout main
 - 重新构建 → 更新 gh-pages 分支（328c764）→ 推送上线；
 - 线上验证：HTTP 200，bundle index-BC_GNaYE.js；部署 JS 含 分享/导出海报/齐鲁/戏曲/排行榜（5/5 True）；
 - main 已同步（cdcac55）。
+
+## 2026-08-07 类别星系互动星图
+
+- 新增 `web/src/components/CategoryGalaxy.vue`：原生 canvas 绘制十类星点（星点大小=子项数，星系螺旋排布，星座连线，背景微光），悬浮高亮 + 点击放大（2.8x 缩放到该星）并显示类别详情面板（子项/项目/传承人/覆盖率/省份/批次），“返回星图”复位；兼容 prefers-reduced-motion 与移动端；
+- 接入「类别星系」区块（分类卡网格之前）；
+- 验证：type-check/build 通过；CDP 实测点击“传统技艺”星点 → 放大 + 详情面板正确显示。
