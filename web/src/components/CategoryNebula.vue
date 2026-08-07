@@ -28,7 +28,7 @@ function mulberry32(seed: number) {
   }
 }
 
-// ---------- 颜色体系 ----------
+// ---------- 颜色 ----------
 const ACCENT: Record<string, string> = {
   民间文学: '#d8b98a',
   传统音乐: '#8a9fd8',
@@ -69,33 +69,44 @@ function mix(a: [number, number, number], b: [number, number, number], t: number
   return `rgb(${r},${g},${bl})`
 }
 
-// ---------- 区域布局（归一化坐标） ----------
+// ---------- 2.5D 固定视角参数 ----------
+// 银河盘面轻微倾斜 + 弱透视，制造空间感但保持固定构图
+const TILT = 0.3
+const F = 1500
+
+// 十个类别在银河主平面上的 3D 位置（x,y 为银河平面坐标，z 为轻微前后层次）
 interface RegionDef {
   name: string
   x: number
   y: number
+  z: number
   shape: 'ellipse' | 'swirl' | 'band' | 'arc' | 'cluster'
   rot: number
 }
 
 const REGIONS: RegionDef[] = [
-  { name: '传统技艺', x: 0.5, y: 0.5, shape: 'swirl', rot: 0.2 },
-  { name: '民俗', x: 0.63, y: 0.4, shape: 'arc', rot: -0.4 },
-  { name: '传统音乐', x: 0.3, y: 0.2, shape: 'ellipse', rot: 0.5 },
-  { name: '传统舞蹈', x: 0.72, y: 0.22, shape: 'band', rot: -0.2 },
-  { name: '民间文学', x: 0.15, y: 0.38, shape: 'swirl', rot: -0.6 },
-  { name: '传统戏剧', x: 0.36, y: 0.72, shape: 'ellipse', rot: 0.3 },
-  { name: '曲艺', x: 0.2, y: 0.64, shape: 'cluster', rot: 0.8 },
-  { name: '传统美术', x: 0.78, y: 0.62, shape: 'band', rot: 0.6 },
-  { name: '传统医药', x: 0.62, y: 0.8, shape: 'arc', rot: 0.1 },
-  { name: '传统体育、游艺与杂技', x: 0.38, y: 0.34, shape: 'cluster', rot: -0.3 },
+  { name: '传统技艺', x: 0, y: 0, z: 0, shape: 'swirl', rot: 0.2 },
+  { name: '民俗', x: 0.16, y: 0.05, z: 8, shape: 'arc', rot: -0.4 },
+  { name: '传统音乐', x: -0.06, y: 0.6, z: 30, shape: 'ellipse', rot: 0.5 },
+  { name: '传统舞蹈', x: 0.58, y: 0.4, z: 26, shape: 'band', rot: -0.2 },
+  { name: '民间文学', x: -0.6, y: 0.34, z: 34, shape: 'swirl', rot: -0.6 },
+  { name: '传统戏剧', x: -0.56, y: -0.16, z: 24, shape: 'ellipse', rot: 0.3 },
+  { name: '曲艺', x: -0.3, y: -0.56, z: 36, shape: 'cluster', rot: 0.8 },
+  { name: '传统美术', x: 0.62, y: -0.14, z: 28, shape: 'band', rot: 0.6 },
+  { name: '传统医药', x: 0.32, y: -0.42, z: 32, shape: 'arc', rot: 0.1 },
+  { name: '传统体育、游艺与杂技', x: 0.1, y: -0.6, z: 38, shape: 'cluster', rot: -0.3 },
 ]
+
+const GALAXY_R = 0.62
 
 // ---------- 画布状态 ----------
 let W = 0
 let H = 0
 let raf = 0
 let t0 = 0
+let reduced = false
+let parallaxX = 0
+let parallaxY = 0
 
 interface Star {
   x: number
@@ -121,10 +132,22 @@ let dust: Dust[] = []
 let microDust: Dust[] = []
 let nebulas: Array<{ tex: HTMLCanvasElement; x: number; y: number; s: number; vx: number; vy: number }> = []
 let dataCanvas: HTMLCanvasElement | null = null
-let regionCenters: Array<{ name: string; x: number; y: number }> = []
-let reduced = false
+let regionScreen: Array<{ name: string; x: number; y: number; scale: number }> = []
 
-// ---------- 星云纹理（离屏生成） ----------
+// ---------- 3D -> 2D 投影 ----------
+function project3D(px: number, py: number, pz: number) {
+  // 银河盘面绕 X 轴倾斜
+  const ct = Math.cos(TILT)
+  const st = Math.sin(TILT)
+  const y1 = py * ct - pz * st
+  const z1 = py * st + pz * ct
+  const scale = F / (F - z1)
+  const cx = W * 0.5 + parallaxX * 10
+  const cy = H * 0.52 + parallaxY * 7
+  return { x: cx + px * scale, y: cy + y1 * scale, scale }
+}
+
+// ---------- 星云纹理 ----------
 function makeNebulaTexture(colors: Array<[string, number]>, seed: number): HTMLCanvasElement {
   const size = 512
   const c = document.createElement('canvas')
@@ -149,39 +172,16 @@ function makeNebulaTexture(colors: Array<[string, number]>, seed: number): HTMLC
   }
   ctx.filter = 'none'
   ctx.globalAlpha = 1
-  // 细碎噪点让星云有质感
   for (let i = 0; i < 260; i += 1) {
-    const x = rng() * size
-    const y = rng() * size
-    const a = 0.03 + rng() * 0.07
-    ctx.globalAlpha = a
+    ctx.globalAlpha = 0.03 + rng() * 0.07
     ctx.fillStyle = '#9fb4d8'
-    ctx.fillRect(x, y, 1 + rng() * 2, 1 + rng() * 2)
+    ctx.fillRect(rng() * size, rng() * size, 1 + rng() * 2, 1 + rng() * 2)
   }
   ctx.globalAlpha = 1
   return c
 }
 
-// ---------- 银河坐标变换 ----------
-function galaxyTransform(x: number, y: number, rng: () => number) {
-  const cx = W * 0.5
-  const cy = H * 0.52
-  let dx = x - cx
-  let dy = y - cy
-  const r = Math.sqrt(dx * dx + dy * dy)
-  const R = Math.hypot(W * 0.45, H * 0.3)
-  const angle = -0.12 + 0.3 * Math.pow(r / R, 2)
-  const cos = Math.cos(angle)
-  const sin = Math.sin(angle)
-  const nx = dx * cos - dy * sin
-  const ny = dx * sin + dy * cos
-  return {
-    x: cx + nx,
-    y: cy + ny * 0.85 + (rng() - 0.5) * 1.5,
-  }
-}
-
-// ---------- 数据层（3610 个真实地区子项） ----------
+// ---------- 数据层（3610 真实子项，仅在类别星团内） ----------
 function buildDataLayer() {
   if (!store.dataset) return
   dataCanvas = document.createElement('canvas')
@@ -194,15 +194,23 @@ function buildDataLayer() {
   const counts = new Map(cats.map((c) => [c.category, c.subitem_count]))
   const max = Math.max(...cats.map((c) => c.subitem_count))
   const min = Math.min(...cats.map((c) => c.subitem_count))
-  regionCenters = []
+  regionScreen = []
 
-  const byCat = new Map<string, { center: { x: number; y: number }; radius: number; def: RegionDef }>()
+  const byCat = new Map<
+    string,
+    { center: { x: number; y: number; z: number }; radius: number; def: RegionDef }
+  >()
   cats.forEach((cat, i) => {
     const def = REGIONS[i]
     const t = max > min ? Math.sqrt((cat.subitem_count - min) / (max - min)) : 0.5
-    const radius = (0.075 + 0.055 * t) * Math.min(W, H)
-    const center = galaxyTransform(def.x * W, def.y * H, Math.random)
-    regionCenters.push({ name: cat.category, x: center.x, y: center.y })
+    const radius = (0.1 + 0.055 * t) * Math.min(W, H)
+    const center = {
+      x: def.x * GALAXY_R * Math.min(W, H),
+      y: def.y * GALAXY_R * Math.min(W, H),
+      z: def.z,
+    }
+    const sp = project3D(center.x, center.y, center.z)
+    regionScreen.push({ name: cat.category, x: sp.x, y: sp.y, scale: sp.scale })
     byCat.set(cat.category, { center, radius, def })
   })
 
@@ -213,7 +221,7 @@ function buildDataLayer() {
     const { center, radius, def } = info
     const a = rng() * Math.PI * 2
     const u = Math.max(1e-6, rng())
-    let r = radius * Math.sqrt(-2 * Math.log(u)) * 0.9
+    let r = radius * Math.sqrt(-2 * Math.log(u)) * 0.85
     let shape = 1
     if (def.shape === 'ellipse') shape = 1 + 0.22 * Math.cos(2 * a)
     else if (def.shape === 'band') shape = 1 + 0.42 * Math.cos(2 * a)
@@ -226,34 +234,34 @@ function buildDataLayer() {
     else if (def.shape === 'ellipse') aspect = 0.55
     else if (def.shape === 'arc') aspect = 0.7
     else if (def.shape === 'swirl') aspect = 0.5
-    const twist = 0.16 * Math.pow(r / radius, 2) * radius
+    const twist = 0.14 * Math.pow(r / radius, 2) * radius
     const rot = def.rot
     const lx = Math.cos(a) * r + Math.sin(a) * twist
     const ly = (Math.sin(a) * r + Math.cos(a) * twist * 0.5) * aspect
-    const px = center.x + Math.cos(rot) * lx - Math.sin(rot) * ly + (rng() - 0.5) * radius * 0.16
-    const py = center.y + Math.sin(rot) * lx + Math.cos(rot) * ly + (rng() - 0.5) * radius * 0.16
-    const g = galaxyTransform(px, py, rng)
-    const x = g.x
-    const y = g.y
-    if (x < 0 || x >= W || y < 0 || y >= H) continue
+    const lz = (rng() - 0.5) * radius * 0.4
+    const wx = center.x + Math.cos(rot) * lx - Math.sin(rot) * ly
+    const wy = center.y + Math.sin(rot) * lx + Math.cos(rot) * ly
+    const wz = center.z + lz
+    const p = project3D(wx, wy, wz)
+    if (p.x < -4 || p.x > W + 4 || p.y < -4 || p.y > H + 4) continue
 
     const accent = hexToRgb(ACCENT[s.category] ?? '#aeb9cf')
     const env = hexToRgb(ENV_BLUE)
     const roll = rng()
     let color: string
-    if (roll < 0.62) color = mix(accent, env, 0.5)
-    else if (roll < 0.78) color = mix(accent, [255, 255, 255], 0.45)
-    else if (roll < 0.9) color = WHITE
+    if (roll < 0.6) color = mix(accent, env, 0.5)
+    else if (roll < 0.76) color = mix(accent, [255, 255, 255], 0.45)
+    else if (roll < 0.88) color = WHITE
     else color = mix(env, accent, 0.25)
-    ctx.globalAlpha = 0.18 + rng() * 0.55
+    ctx.globalAlpha = (0.18 + rng() * 0.55) * (0.92 + p.scale * 0.02)
     ctx.fillStyle = color
-    const size = roll < 0.9 ? 1 + rng() * 0.6 : 1.8 + rng() * 0.8
-    ctx.fillRect(x, y, size, size)
+    const size = (roll < 0.9 ? 1 + rng() * 0.6 : 1.8 + rng() * 0.8) * p.scale
+    ctx.fillRect(p.x, p.y, size, size)
   }
   ctx.globalAlpha = 1
 }
 
-// ---------- 背景构建 ----------
+// ---------- 背景（装饰层） ----------
 function buildBackground() {
   const rng = mulberry32(20260807)
   farStars = []
@@ -269,10 +277,8 @@ function buildBackground() {
       x = rng() * W
       y = rng() * H
     }
-    if (x < 0) x = 0
-    if (y < 0) y = 0
-    if (x >= W) x = W - 1
-    if (y >= H) y = H - 1
+    x = Math.max(0, Math.min(W - 1, x))
+    y = Math.max(0, Math.min(H - 1, y))
     const roll = rng()
     const c = roll < 0.7 ? '#9fb4c7' : roll < 0.88 ? '#c7d4e8' : '#c9b08a'
     farStars.push({
@@ -308,7 +314,6 @@ function buildBackground() {
     })
   }
 
-  // 全画布微尘：确保整个区域都有细微质感
   microDust = []
   for (let i = 0; i < 1500; i += 1) {
     const palette = ['#5f82b8', '#6fb4c9', '#7d6fc4', '#9fb4c7']
@@ -338,13 +343,14 @@ function buildLabels() {
   const labels = labelsRef.value
   labels.innerHTML = ''
   store.dataset.categories.forEach((cat) => {
-    const c = regionCenters.find((r) => r.name === cat.category)
+    const c = regionScreen.find((r) => r.name === cat.category)
     if (!c) return
     const div = document.createElement('div')
     div.className = 'nebula-label'
     div.innerHTML = `<i>${EN_TITLES[cat.category] ?? ''}</i><b>${cat.category}</b><span>${cat.subitem_count.toLocaleString()} 个地区子项</span>`
     div.style.left = `${c.x}px`
     div.style.top = `${c.y}px`
+    div.style.transform = `translate(-50%,-50%) scale(${0.92 + c.scale * 0.08})`
     labels.appendChild(div)
   })
 }
@@ -359,7 +365,6 @@ function draw(t: number) {
   t0 = t
   const sec = t / 1000
 
-  // 深蓝黑渐变底
   ctx.clearRect(0, 0, W, H)
   const bg = ctx.createRadialGradient(W * 0.5, H * 0.52, 0, W * 0.5, H * 0.52, Math.max(W, H) * 0.72)
   bg.addColorStop(0, '#101b30')
@@ -368,7 +373,7 @@ function draw(t: number) {
   ctx.fillStyle = bg
   ctx.fillRect(0, 0, W, H)
 
-  // 星云（缓慢漂移）
+  // 星云
   ctx.globalCompositeOperation = 'screen'
   nebulas.forEach((n) => {
     n.x += n.vx * dt * 0.001
@@ -383,7 +388,7 @@ function draw(t: number) {
   ctx.globalCompositeOperation = 'source-over'
   ctx.globalAlpha = 1
 
-  // 远景恒星（轻微闪烁）
+  // 远景恒星
   for (const s of farStars) {
     const a = s.o * (0.72 + 0.28 * Math.sin(sec * s.sp + s.p))
     ctx.globalAlpha = a
@@ -391,11 +396,11 @@ function draw(t: number) {
     ctx.fillRect(s.x, s.y, s.r, s.r)
   }
 
-  // 全画布微尘
+  // 微尘 + 星尘
   ctx.globalCompositeOperation = 'lighter'
   for (const d of microDust) {
-    d.x += d.vx * dt * 0.001 * 60
-    d.y += d.vy * dt * 0.001 * 60
+    d.x += d.vx * dt * 0.06
+    d.y += d.vy * dt * 0.06
     if (d.x < 0) d.x += W
     if (d.x >= W) d.x -= W
     if (d.y < 0) d.y += H
@@ -404,11 +409,9 @@ function draw(t: number) {
     ctx.fillStyle = d.c
     ctx.fillRect(d.x, d.y, d.r, d.r)
   }
-
-  // 中景星尘（缓慢漂移）
   for (const d of dust) {
-    d.x += d.vx * dt * 0.001 * 60
-    d.y += d.vy * dt * 0.001 * 60
+    d.x += d.vx * dt * 0.06
+    d.y += d.vy * dt * 0.06
     if (d.x < 0) d.x += W
     if (d.x >= W) d.x -= W
     if (d.y < 0) d.y += H
@@ -420,25 +423,30 @@ function draw(t: number) {
   ctx.globalCompositeOperation = 'source-over'
   ctx.globalAlpha = 1
 
-  // 数据层（静态离屏，直接贴图）
-  if (dataCanvas) ctx.drawImage(dataCanvas, 0, 0)
+  // 数据层（含视差整体偏移）
+  if (dataCanvas) {
+    ctx.save()
+    ctx.translate(parallaxX * 10, parallaxY * 7)
+    ctx.drawImage(dataCanvas, 0, 0)
+    ctx.restore()
+  }
 
-  // 类别锚点微光（呼吸）
-  regionCenters.forEach((c, i) => {
+  // 类别锚点微光（呼吸），放在数据层之上作为视觉锚点
+  regionScreen.forEach((c, i) => {
     const a = 0.05 + 0.025 * Math.sin(sec * 0.4 + i * 1.3)
-    const grd = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 26)
+    const grd = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, 30 * c.scale)
     grd.addColorStop(0, `rgba(180,200,235,${a})`)
     grd.addColorStop(1, 'rgba(180,200,235,0)')
     ctx.fillStyle = grd
     ctx.beginPath()
-    ctx.arc(c.x, c.y, 26, 0, Math.PI * 2)
+    ctx.arc(c.x, c.y, 30 * c.scale, 0, Math.PI * 2)
     ctx.fill()
   })
 
   if (!reduced) raf = requestAnimationFrame(draw)
 }
 
-// ---------- 尺寸与重建 ----------
+// ---------- 尺寸/重建 ----------
 function rebuild() {
   const canvas = canvasRef.value
   const wrap = canvas?.parentElement
@@ -458,12 +466,21 @@ function rebuild() {
   buildLabels()
 }
 
+function onPointerMove(e: PointerEvent) {
+  const canvas = canvasRef.value
+  if (!canvas) return
+  const rect = canvas.getBoundingClientRect()
+  parallaxX = ((e.clientX - rect.left) / rect.width) * 2 - 1
+  parallaxY = ((e.clientY - rect.top) / rect.height) * 2 - 1
+}
+
 onMounted(async () => {
   reduced =
     typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   await new Promise((r) => requestAnimationFrame(r))
   rebuild()
   window.addEventListener('resize', rebuild)
+  window.addEventListener('pointermove', onPointerMove, { passive: true })
   if (!reduced) raf = requestAnimationFrame(draw)
   else draw(0)
 })
@@ -479,6 +496,7 @@ watch(
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf)
   window.removeEventListener('resize', rebuild)
+  window.removeEventListener('pointermove', onPointerMove)
 })
 </script>
 
@@ -515,6 +533,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   padding: 0;
   height: 560px;
+  cursor: default;
 }
 .nebula-labels {
   position: absolute;
@@ -524,10 +543,10 @@ onBeforeUnmount(() => {
 }
 .nebula-label {
   position: absolute;
-  transform: translate(-50%, -50%);
   text-align: center;
   pointer-events: none;
   line-height: 1.35;
+  transform-origin: center;
 }
 .nebula-label i {
   display: block;
