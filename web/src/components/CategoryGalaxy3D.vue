@@ -73,12 +73,14 @@ interface DetailParticle {
 
 let detailPoints: THREE.Points | null = null
 let detailParticles: DetailParticle[] = []
-let provinceAnchors: Array<{ name: string; pos: THREE.Vector3 }> = []
 let detailOpacity = 0
 
 // 相机
 const CAM = { theta: 0.6, phi: 1.15, radius: 560 }
 const CAM_TARGET = { theta: 0.6, phi: 1.15, radius: 560, fov: 55 }
+const camTarget = new THREE.Vector3()
+const ORIGIN = new THREE.Vector3(0, 0, 0)
+let detailCenter = new THREE.Vector3()
 const THETA_MIN = -1.5
 const THETA_MAX = 1.5
 const PHI_MIN = 0.85
@@ -404,56 +406,30 @@ function buildCatBodies() {
 function buildDetail(cat: CategoryRow) {
   if (!scene || !store.dataset) return
   const items = store.dataset.subitems.filter((s) => s.category === cat.category)
-  const byProvince = new Map<string, Subitem[]>()
+  // 粒子球体：该类别全部真实子项，围绕球心形成 3D 高斯球
+  const R = 125 + 25 * Math.sqrt(items.length / 629)
+  const palIdx = new Map<string, number>()
   for (const s of items) {
-    if (!byProvince.has(s.province)) byProvince.set(s.province, [])
-    byProvince.get(s.province)!.push(s)
+    if (!palIdx.has(s.province)) palIdx.set(s.province, palIdx.size)
   }
-  const provinces = [...byProvince.keys()].sort(
-    (a, b) => (byProvince.get(b)?.length ?? 0) - (byProvince.get(a)?.length ?? 0),
-  )
-  const n = provinces.length
-  provinceAnchors = provinces.map((name, i) => {
-    const angle = (i / Math.max(1, n)) * Math.PI * 2
-    const R = 120 + (i % 4) * 26
-    return {
-      name,
-      pos: new THREE.Vector3(
-        Math.cos(angle) * R,
-        (i - n / 2) * 7,
-        Math.sin(angle) * R * 0.75,
-      ),
-    }
-  })
-  const anchorPos = new Map<string, number>()
-  provinceAnchors.forEach((a, i) => anchorPos.set(a.name, i))
-  if (labelsRef.value) {
-    provinceAnchors.forEach((a) => {
-      const div = document.createElement('div')
-      div.className = 'galaxy-label galaxy-province'
-      div.innerHTML = `<b>${a.name}</b>`
-      labelsRef.value!.appendChild(div)
-    })
-  }
-
   detailParticles = items.map((s) => ({
     subitem: s,
     province: s.province,
     batch: s.batch_no,
-    anchorIdx: anchorPos.get(s.province) ?? 0,
+    anchorIdx: palIdx.get(s.province) ?? 0,
   }))
 
   const geo = new THREE.BufferGeometry()
   const pos = new Float32Array(detailParticles.length * 3)
   const col = new Float32Array(detailParticles.length * 3)
   detailParticles.forEach((p, i) => {
-    const a = provinceAnchors[p.anchorIdx].pos
-    const ox = (Math.random() - 0.5) * 30
-    const oy = (Math.random() - 0.5) * 20
-    const oz = (Math.random() - 0.5) * 30
-    pos[i * 3] = a.x + ox
-    pos[i * 3 + 1] = a.y + oy
-    pos[i * 3 + 2] = a.z + oz
+    const th = Math.random() * Math.PI * 2
+    const ph = Math.acos(2 * Math.random() - 1)
+    const u = Math.max(1e-6, Math.random())
+    const r = Math.min(R, R * Math.sqrt(-2 * Math.log(u)) * 0.8)
+    pos[i * 3] = Math.sin(ph) * Math.cos(th) * r
+    pos[i * 3 + 1] = Math.cos(ph) * r * 0.92
+    pos[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * r
   })
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
   applyParticleColors(geo, col)
@@ -494,12 +470,6 @@ function destroyDetail() {
   }
   detailPoints = null
   detailParticles = []
-  provinceAnchors = []
-  if (labelsRef.value && catBodies.length) {
-    while (labelsRef.value.children.length > catBodies.length) {
-      labelsRef.value.removeChild(labelsRef.value.lastChild!)
-    }
-  }
 }
 
 // ---------- 相机 ----------
@@ -522,11 +492,11 @@ function updateCamera(dt: number) {
   const ph = Math.max(0.3, Math.min(Math.PI - 0.3, CAM.phi + parallaxY * 0.04))
   const sinPhi = Math.sin(ph)
   camera.position.set(
-    CAM.radius * sinPhi * Math.sin(th),
-    CAM.radius * Math.cos(ph),
-    CAM.radius * sinPhi * Math.cos(th),
+    camTarget.x + CAM.radius * sinPhi * Math.sin(th),
+    camTarget.y + CAM.radius * Math.cos(ph),
+    camTarget.z + CAM.radius * sinPhi * Math.cos(th),
   )
-  camera.lookAt(0, 0, 0)
+  camera.lookAt(camTarget)
 }
 
 // ---------- 标签 / 工具提示 ----------
@@ -552,22 +522,6 @@ function updateLabels() {
     const hover = hoverCat === i ? 1 : 0.6
     el.style.opacity = String(b.fade * distFade * hover)
   })
-  if (level.value === 1) {
-    const start = catBodies.length
-    provinceAnchors.forEach((a, i) => {
-      const el = labelsRef.value!.children[start + i] as HTMLElement | undefined
-      if (!el) return
-      v.copy(a.pos).project(cam)
-      if (v.z > 1) {
-        el.style.display = 'none'
-        return
-      }
-      el.style.display = 'block'
-      el.style.left = `${(v.x * 0.5 + 0.5) * w}px`
-      el.style.top = `${(-v.y * 0.5 + 0.5) * h}px`
-      el.style.opacity = String(0.4 + 0.3 * detailOpacity)
-    })
-  }
 }
 
 function showTooltip(html: string) {
@@ -597,8 +551,9 @@ function loop(t: number) {
       if (b) {
         CAM_TARGET.theta = Math.atan2(b.pos.x, b.pos.z)
         CAM_TARGET.phi = 1.05
-        CAM_TARGET.radius = b.pos.length() * 0.55 + 90
-        CAM_TARGET.fov = 42
+        CAM_TARGET.radius = b.pos.length() * 0.45 + 150
+        CAM_TARGET.fov = 45
+        camTarget.lerpVectors(ORIGIN, detailCenter, e)
         b.dust.scale.setScalar(1 + e * 0.5)
       }
       catBodies.forEach((x) => {
@@ -607,6 +562,7 @@ function loop(t: number) {
       detailOpacity = p > 0.55 ? (p - 0.55) / 0.45 : 0
       if (p >= 1) {
         level.value = 1
+        camTarget.copy(detailCenter)
         trans = null
       }
     } else {
@@ -614,6 +570,7 @@ function loop(t: number) {
       CAM_TARGET.phi = 1.15
       CAM_TARGET.radius = 560
       CAM_TARGET.fov = 55
+      camTarget.lerpVectors(detailCenter, ORIGIN, e)
       catBodies.forEach((x) => {
         x.fadeTarget = e
         if (x.row.category === selectedCategory.value?.category) x.dust.scale.setScalar(1 + (1 - e) * 0.5)
@@ -621,6 +578,8 @@ function loop(t: number) {
       detailOpacity = 1 - e
       if (p >= 1) {
         destroyDetail()
+        camTarget.copy(ORIGIN)
+        detailCenter.set(0, 0, 0)
         selectedCategory.value = null
         level.value = 0
         trans = null
@@ -641,10 +600,16 @@ function loop(t: number) {
   })
   if (detailPoints) {
     ;(detailPoints.material as THREE.PointsMaterial).opacity = detailOpacity
-    detailPoints.rotation.y += dt * 0.02
+    detailPoints.rotation.y += dt * 0.04
   }
 
   // 背景
+  if (galaxyPlane) {
+    const gTarget = level.value === 1 ? 0 : 0.62
+    const gk = 1 - Math.exp(-3 * dt)
+    const gm = galaxyPlane.material as THREE.MeshBasicMaterial
+    gm.opacity += (gTarget - gm.opacity) * gk
+  }
   if (galaxyPlane) galaxyPlane.rotation.z += dt * 0.004
   if (bgStars) {
     bgStars.rotation.y += dt * 0.002
@@ -787,6 +752,8 @@ function enterCategory(i: number) {
   selectedCategory.value = b.row
   level.value = 0
   buildDetail(b.row)
+  if (detailPoints) detailPoints.position.copy(b.pos)
+  detailCenter.copy(b.pos)
   detailOpacity = 0
   hoverCat = -1
   hideTooltip()
