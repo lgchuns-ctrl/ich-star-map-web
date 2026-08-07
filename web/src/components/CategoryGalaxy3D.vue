@@ -108,6 +108,7 @@ let tooltipPos = { x: 0, y: 0 }
 let bgStars: THREE.Points | null = null
 let midDust: THREE.Points | null = null
 let nebulas: THREE.Sprite[] = []
+let galaxyPlane: THREE.Mesh | null = null
 
 const reduced =
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -139,6 +140,8 @@ function disposeObject(o: THREE.Object3D) {
   const mat = mesh.material as THREE.Material | THREE.Material[] | undefined
   if (Array.isArray(mat)) mat.forEach((m) => m.dispose())
   else mat?.dispose()
+  const mm = mat as THREE.MeshBasicMaterial | undefined
+  mm?.map?.dispose()
   const sprite = o as THREE.Sprite
   const sm = sprite.material as THREE.SpriteMaterial | undefined
   sm?.map?.dispose()
@@ -158,8 +161,86 @@ function clearScene() {
 }
 
 // ---------- 背景 ----------
+function makeGalaxyTexture(): THREE.CanvasTexture {
+  const size = 1024
+  const c = document.createElement('canvas')
+  c.width = size
+  c.height = size
+  const ctx = c.getContext('2d')
+  if (!ctx) return new THREE.CanvasTexture(c)
+  let a = 987654321
+  const rng = () => {
+    a |= 0
+    a = (a + 0x6d2b79f5) | 0
+    let t = Math.imul(a ^ (a >>> 15), 1 | a)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+  // 中央亮核
+  const core = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size * 0.16)
+  core.addColorStop(0, 'rgba(225,230,248,0.5)')
+  core.addColorStop(0.3, 'rgba(130,150,210,0.26)')
+  core.addColorStop(1, 'rgba(40,60,120,0)')
+  ctx.fillStyle = core
+  ctx.fillRect(0, 0, size, size)
+  // 旋臂
+  const arms = [
+    { color: 'rgba(96,138,214,0.17)', off: 0 },
+    { color: 'rgba(138,116,204,0.15)', off: (Math.PI * 2) / 3 },
+    { color: 'rgba(64,152,184,0.15)', off: (Math.PI * 4) / 3 },
+  ]
+  ctx.globalCompositeOperation = 'lighter'
+  arms.forEach((arm) => {
+    for (let i = 0; i < 2600; i += 1) {
+      const t = rng()
+      const r = size * (0.05 + 0.42 * Math.pow(t, 0.7))
+      const theta = arm.off + t * Math.PI * 4.2 + (rng() - 0.5) * 0.35
+      const x = size / 2 + Math.cos(theta) * r
+      const y = size / 2 + Math.sin(theta) * r * 0.55
+      ctx.globalAlpha = 0.05 + rng() * 0.12
+      ctx.fillStyle = arm.color
+      ctx.fillRect(x, y, 2, 2)
+    }
+  })
+  // 椭圆盘面星尘
+  const palette = ['#5f82b8', '#6fb4c9', '#7d6fc4', '#9fb4c7', '#b08a5f']
+  for (let i = 0; i < 2600; i += 1) {
+    let x = 0
+    let y = 0
+    do {
+      x = rng() * 2 - 1
+      y = rng() * 2 - 1
+    } while (x * x + y * y > 1)
+    ctx.globalAlpha = 0.05 + rng() * 0.12
+    ctx.fillStyle = palette[Math.floor(rng() * palette.length)]
+    ctx.fillRect(size / 2 + x * size * 0.46, size / 2 + y * size * 0.24, 1.4, 1.4)
+  }
+  ctx.globalCompositeOperation = 'source-over'
+  ctx.globalAlpha = 1
+  ctx.filter = 'blur(5px)'
+  ctx.drawImage(c, 0, 0)
+  ctx.filter = 'none'
+  return new THREE.CanvasTexture(c)
+}
+
 function buildBackground() {
   if (!scene) return
+  // 银河盘面（主背景，位于所有天体之后）
+  const galaxyTex = makeGalaxyTexture()
+  const galaxyMat = new THREE.MeshBasicMaterial({
+    map: galaxyTex,
+    transparent: true,
+    opacity: 0.62,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  })
+  galaxyPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), galaxyMat)
+  galaxyPlane.scale.set(2600, 1300, 1)
+  galaxyPlane.rotation.x = -Math.PI / 2 + 0.16
+  galaxyPlane.rotation.z = 0.25
+  galaxyPlane.renderOrder = -1
+  scene.add(galaxyPlane)
+
   // 远景恒星
   const starGeo = new THREE.BufferGeometry()
   const starCount = 1500
@@ -241,18 +322,14 @@ function buildCatBodies() {
   const counts = cats.map((c) => c.subitem_count)
   const min = Math.min(...counts)
   const max = Math.max(...counts)
-  const layout: Array<[number, number, number]> = [
-    [0, 10, -20], // 传统技艺（中心偏后，最大）
-    [-30, 140, -80], // 传统音乐（上方）
-    [-190, 45, 120], // 民间文学（左前景）
-    [190, 40, 130], // 传统舞蹈（右前景）
-    [-220, -45, -30], // 传统戏剧（左中景）
-    [-140, -120, -150], // 曲艺（左远景）
-    [215, -50, -20], // 传统美术（右中景）
-    [150, -130, -140], // 民俗（右远景）
-    [60, -140, 180], // 传统医药（前景）
-    [-70, -150, 170], // 传统体育、游艺与杂技（前景）
-  ]
+  // 十颗天体排成一圈（XZ 平面圆环，轻微错位避免机械感）
+  const RING_R = 250
+  const layout: Array<[number, number, number]> = cats.map((_, i) => {
+    const angle = (i / cats.length) * Math.PI * 2 - Math.PI / 2
+    const jx = i % 2 === 0 ? 6 : -6
+    const jz = i % 3 === 0 ? 5 : -4
+    return [Math.cos(angle) * RING_R + jx, (i % 4) - 2, Math.sin(angle) * RING_R + jz]
+  })
   catBodies = cats.map((row, i) => {
     const pos = new THREE.Vector3(...layout[i])
     const color = GALAXY_COLORS[row.category] ?? '#aeb9cf'
@@ -568,6 +645,7 @@ function loop(t: number) {
   }
 
   // 背景
+  if (galaxyPlane) galaxyPlane.rotation.z += dt * 0.004
   if (bgStars) {
     bgStars.rotation.y += dt * 0.002
     ;(bgStars.material as THREE.PointsMaterial).opacity = 0.45 + 0.08 * Math.sin(time * 0.25)
