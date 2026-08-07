@@ -84,6 +84,12 @@ const REGION_ALIASES: Record<string, string> = {
   台湾: '台湾省',
   香港: '香港特别行政区',
   澳门: '澳门特别行政区',
+  齐鲁: '山东省',
+  燕赵: '河北省',
+  荆楚: '湖北省',
+  潇湘: '湖南省',
+  八桂: '广西壮族自治区',
+  陇: '甘肃省',
 }
 
 const CATEGORY_ALIASES: Record<string, string> = {
@@ -109,6 +115,17 @@ const CATEGORY_ALIASES: Record<string, string> = {
   医药: '传统医药',
   中医: '传统医药',
   民俗: '民俗',
+  戏曲: '传统戏剧',
+  相声: '曲艺',
+  评书: '曲艺',
+  说书: '曲艺',
+  武术: '传统体育、游艺与杂技',
+  民歌: '传统音乐',
+  剪纸: '传统美术',
+  陶瓷: '传统技艺',
+  传说: '民间文学',
+  节庆: '民俗',
+  刺绣: '传统美术',
 }
 
 const TEMPLATE_LABEL: Record<QueryTemplate, string> = {
@@ -160,23 +177,29 @@ export function parseIntent(raw: string, provinces: string[]): IntentQuery {
   if (/覆盖率|覆盖/.test(text)) metric = 'coverage'
   else if (/传承人/.test(text)) metric = 'inheritor'
   else if (/独立项目|项目数|项目/.test(text)) metric = 'project'
-  else if (/子项/.test(text)) metric = 'subitem'
+  else if (/子项|数量|多少|总数/.test(text)) metric = 'subitem'
 
   const inheritorIntent = /传承人|传承资源|覆盖率/.test(text)
   const hasTop =
-    /最多|最少|排名|排行|前\s*\d+|前[一二三四五六七八九十]+\s*名|top|榜首|第一|前几/.test(text)
-  const hasTrend = /趋势|变化|演化|发展|逐年|历年|批次|历史|演进/.test(text)
-  const hasMap = /地图|全国分布|分布在全国|看下全国|看看全国/.test(text)
+    /最多|最少|排名|排行|排行榜|榜单|前\s*\d+|前[一二三四五六七八九十]+\s*名|top|榜首|第一|前几|哪个最多|哪个最少|最多的是|最少的是/.test(
+      text,
+    )
+  const hasTrend =
+    /趋势|变化|演化|发展|逐年|历年|批次|历史|演进|走势|涨|跌|增多|减少|发展历程|这些年/.test(text)
+  const hasMap = /地图|全国分布|分布在全国|看下全国|看看全国|分布图|地图上|热力/.test(text)
   const hasCompare =
     regions.length >= 2 || /对比|比较|vs|和\s*.{0,8}比|与\s*.{0,8}相比|比一比/.test(text)
   const hasDist = /分布|构成|占比|有哪些|哪些|都是|有多少|几个/.test(text)
 
   let template: QueryTemplate
+  if (hasCompare && regions.length < 2) {
+    return errorQuery('对比需要两个地区，例如：对比浙江和山东。', suggestions)
+  }
   if (regions.length >= 2 && inheritorIntent) template = 'inheritor-compare'
   else if (regions.length === 1 && inheritorIntent) template = 'inheritor-compare'
   else if (hasMap) template = 'map'
   else if (hasTrend) template = 'batch-trend'
-  else if (regions.length >= 2 || hasCompare) template = 'compare'
+  else if (regions.length >= 2) template = 'compare'
   else if (hasTop) template = 'top'
   else if (category || regions.length === 1 || hasDist) template = 'category-dist'
   else template = 'top'

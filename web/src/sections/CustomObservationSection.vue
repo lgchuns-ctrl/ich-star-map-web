@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import Reveal from '@/components/Reveal.vue'
 import { parseIntent, type IntentQuery, type QueryMetric } from '@/services/intentParser'
 import { useAppStore } from '@/stores/appStore'
@@ -17,6 +17,8 @@ const query = ref<IntentQuery | null>(null)
 const error = ref('')
 const listening = ref(false)
 const voiceError = ref('')
+const shareMsg = ref('')
+const pendingQuery = ref('')
 
 const chartEl = ref<HTMLDivElement | null>(null)
 let chart: echarts.ECharts | null = null
@@ -512,6 +514,90 @@ function exportData() {
   URL.revokeObjectURL(url)
 }
 
+function currentShareUrl() {
+  const base = `${location.origin}${location.pathname}`
+  const q = input.value.trim()
+  return q ? `${base}?q=${encodeURIComponent(q)}#custom` : `${base}#custom`
+}
+
+async function share() {
+  const url = currentShareUrl()
+  const text = `非遗星图 · 自定义观察：${input.value || '看看我的定制图表'}`
+  try {
+    if (navigator.share) {
+      await navigator.share({ title: '非遗星图', text, url })
+      return
+    }
+    await navigator.clipboard.writeText(url)
+    shareMsg.value = '链接已复制，可直接发给别人。'
+  } catch {
+    try {
+      await navigator.clipboard.writeText(url)
+      shareMsg.value = '链接已复制，可直接发给别人。'
+    } catch {
+      shareMsg.value = '复制失败，请手动复制地址栏链接。'
+    }
+  }
+}
+
+function exportPoster() {
+  if (!chart || !query.value) return
+  const chartUrl = chart.getDataURL({ type: 'png', pixelRatio: 2, backgroundColor: '#101826' })
+  const img = new Image()
+  img.onload = () => {
+    const W = 1080
+    const H = 1440
+    const canvas = document.createElement('canvas')
+    canvas.width = W
+    canvas.height = H
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    const grad = ctx.createLinearGradient(0, 0, 0, H)
+    grad.addColorStop(0, '#101826')
+    grad.addColorStop(1, '#0b101a')
+    ctx.fillStyle = grad
+    ctx.fillRect(0, 0, W, H)
+    ctx.strokeStyle = 'rgba(217,184,119,0.6)'
+    ctx.lineWidth = 3
+    ctx.strokeRect(24, 24, W - 48, H - 48)
+    ctx.textAlign = 'center'
+    ctx.fillStyle = '#d9b877'
+    ctx.font = 'bold 44px "Noto Serif SC","Songti SC","SimSun",serif'
+    ctx.fillText('非遗星图 · 自定义观察', W / 2, 110)
+    ctx.fillStyle = '#f2e8d5'
+    ctx.font = '26px "PingFang SC","Microsoft YaHei",sans-serif'
+    ctx.fillText(query.value!.note, W / 2, 170)
+    const chartW = W - 160
+    const chartH = (img.height / img.width) * chartW
+    ctx.drawImage(img, 80, 210, chartW, Math.min(chartH, 760))
+    const y0 = 210 + Math.min(chartH, 760) + 60
+    ctx.textAlign = 'left'
+    ctx.fillStyle = '#b9ad96'
+    ctx.font = '22px "PingFang SC","Microsoft YaHei",sans-serif'
+    const meta = store.dataset?.metadata
+    const lines = [
+      `数据版本 ${meta?.data_version ?? ''} · 更新于 ${meta?.updated_at ?? ''}`,
+      '数据来源：中国非物质文化遗产网（ihchina.cn）公开接口',
+      '相关指标基于公开国家级名录及国家级代表性传承人数据构建，仅反映公开数据中的资源配置',
+      '与覆盖情况，不代表官方濒危等级或保护成效评价。',
+    ]
+    lines.forEach((line, i) => ctx.fillText(line, 80, y0 + i * 40))
+    ctx.textAlign = 'right'
+    ctx.fillStyle = '#8a7f6a'
+    ctx.font = '20px "PingFang SC","Microsoft YaHei",sans-serif'
+    ctx.fillText('非遗星图 · 国家级非物质文化遗产项目传承观察', W - 80, H - 60)
+    canvas.toBlob((blob) => {
+      if (!blob) return
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `非遗星图-海报-${query.value!.note.replace(/[·：]/g, '-')}.png`
+      a.click()
+      URL.revokeObjectURL(a.href)
+    }, 'image/png')
+  }
+  img.src = chartUrl
+}
+
 function useExample(text: string) {
   input.value = text
   generate()
@@ -590,9 +676,24 @@ onBeforeUnmount(() => {
   chart = null
 })
 
+onMounted(() => {
+  const q = new URLSearchParams(location.search).get('q')
+  if (q) {
+    input.value = q
+    pendingQuery.value = q
+  }
+})
+
 watch(
   () => store.dataset,
   () => {
+    if (pendingQuery.value && store.dataset) {
+      const q = pendingQuery.value
+      pendingQuery.value = ''
+      input.value = q
+      generate()
+      return
+    }
     if (query.value) void nextTick(ensureChart)
   },
   { deep: false },
@@ -673,9 +774,12 @@ watch(
             <div class="result-actions">
               <button type="button" class="btn btn-sm" @click="exportImage">导出图片</button>
               <button type="button" class="btn btn-sm" @click="exportData">导出数据</button>
+              <button type="button" class="btn btn-sm" @click="exportPoster">导出海报</button>
+              <button type="button" class="btn btn-sm" @click="share">分享</button>
               <button type="button" class="btn btn-sm" @click="clearResult">清除</button>
             </div>
           </div>
+          <p v-if="shareMsg" class="share-msg">{{ shareMsg }}</p>
 
           <div v-if="query.template === 'compare' && compareRows.length" class="compare-cards">
             <div v-for="row in compareRows" :key="row.province" class="compare-card">
@@ -705,6 +809,7 @@ watch(
           <p class="small muted result-note">
             数据来源：中国非物质文化遗产网公开接口 · 数据版本
             {{ store.dataset?.metadata.data_version }} · 仅反映公开数据配置情况，不代表官方濒危等级或保护成效评价。
+            <button type="button" class="link-btn" @click="share">复制分享链接</button>
           </p>
         </div>
         <div v-else class="card empty-state">输入或说出你的问题，点击“生成图表”开始。</div>
@@ -778,6 +883,20 @@ watch(
   display: flex;
   gap: 8px;
   flex: none;
+}
+.share-msg {
+  color: var(--gold);
+  font-size: 13px;
+  margin: 8px 0 0;
+}
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--gold);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0 0 0 8px;
+  font-size: 12px;
 }
 @media (max-width: 640px) {
   .result-actions {

@@ -78,9 +78,39 @@ const CASES: Case[] = [
   { input: '广东的覆盖率', template: 'inheritor-compare', regions: ['广东省'], metric: 'coverage' },
   { input: '鲁苏的传承人', template: 'inheritor-compare', regions: ['山东省', '江苏省'] },
   { input: '川渝的传承资源', template: 'inheritor-compare', regions: ['四川省', '重庆市'] },
+  // 地区别称
+  { input: '齐鲁的传统美术', template: 'category-dist', regions: ['山东省'], category: '传统美术' },
+  { input: '燕赵的民间文学', template: 'category-dist', regions: ['河北省'], category: '民间文学' },
+  { input: '荆楚有多少非遗', template: 'category-dist', regions: ['湖北省'] },
+  { input: '潇湘的曲艺', template: 'category-dist', regions: ['湖南省'], category: '曲艺' },
+  { input: '八桂的民俗', template: 'category-dist', regions: ['广西壮族自治区'], category: '民俗' },
+  { input: '陇的项目', template: 'category-dist', regions: ['甘肃省'], metric: 'project' },
+  // 类别别名
+  { input: '戏曲的分布', template: 'category-dist', category: '传统戏剧' },
+  { input: '相声的分布', template: 'category-dist', category: '曲艺' },
+  { input: '武术最多的省份', template: 'top', category: '传统体育、游艺与杂技' },
+  { input: '民歌排名', template: 'top', category: '传统音乐' },
+  { input: '剪纸的分布', template: 'category-dist', category: '传统美术' },
+  { input: '陶瓷最多的省', template: 'top', category: '传统技艺' },
+  { input: '传说最多的省份', template: 'top', category: '民间文学' },
+  { input: '节庆的分布', template: 'category-dist', category: '民俗' },
+  { input: '刺绣分布', template: 'category-dist', category: '传统美术' },
+  // 指标与排行口语
+  { input: '非遗数量排行榜', template: 'top', metric: 'subitem' },
+  { input: '传承人数量排行', template: 'top', metric: 'inheritor' },
+  { input: '前十名的省份', template: 'top' },
+  { input: '哪个省最多的是民间文学', template: 'top', category: '民间文学' },
+  // 趋势口语
+  { input: '走势图', template: 'batch-trend' },
+  { input: '这些年传统技艺的走势', template: 'batch-trend', category: '传统技艺' },
+  { input: '从2006到现在的变化', template: 'batch-trend' },
+  // 地图口语
+  { input: '各地分布图', template: 'map' },
+  { input: '地图上看看', template: 'map' },
   // 无效输入
   { input: '你好', template: 'top' },
   { input: '我想看看', template: 'top' },
+  { input: '对比一下', template: 'top' },
 ]
 
 describe('parseIntent', () => {
